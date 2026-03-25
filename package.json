@@ -1,0 +1,26 @@
+{
+  "name": "zmm-suppiv-man",
+  "version": "1.0.0",
+  "description": "Supplier Invoice Management - S/4HANA 2025 Extension",
+  "scripts": {
+    "build": "npm run build:dist",
+    "build:dist": "node scripts/build.js",
+    "clean": "node scripts/clean.js",
+    "prepare": "npm install"
+  },
+  "keywords": [
+    "fiori",
+    "ui5",
+    "s4hana",
+    "supplier-invoice"
+  ],
+  "author": "SAP",
+  "license": "SAP",
+  "devDependencies": {
+    "uglify-js": "^3.17.0",
+    "copyfiles": "^2.4.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

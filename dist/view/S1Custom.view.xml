@@ -1,0 +1,289 @@
+<!--
+
+    Copyright (C) 2009-2020 SAP SE or an SAP affiliate company. All rights reserved.
+
+-->
+<mvc:View controllerName="ui.s2p.mm.supplinvoice.manage.s1.controller.S1" displayBlock="true" height="100%" xmlns:core="sap.ui.core"
+	xmlns:l="sap.ui.layout" xmlns:block="ui.s2p.mm.supplinvoice.manage.s1.view.blocks.S1" xmlns:mvc="sap.ui.core.mvc"
+	xmlns:objectPage="sap.uxap" xmlns:smartField="sap.ui.comp.smartfield" xmlns:smartLink="sap.ui.comp.navpopover"
+	xmlns:semantic="sap.m.semantic" xmlns:ui="sap.ca.ui" xmlns="sap.m" xmlns:sap.ui.dt="sap.ui.dt" id="idS2P.MM.MSI.ViewS1">
+	<semantic:FullscreenPage id="idS2P.MM.MSI.SemanticFullscreenPageMain" navButtonPress="navBack" showNavButton="true" showSubHeader="false"
+		title="{= ${SupplierInvoice} === '' ? ${i18n>appTitleCreate} : ${i18n>appTitleDisplay}}" showFooter="{fullScreen>/EditMode}"
+		floatingFooter="{fullScreen>/EditMode}" enableScrolling="false" validationSuccess="onValidationSuccess">
+		<objectPage:ObjectPageLayout id="idS2P.MM.MSI.ObjectPageLayoutMain" alwaysShowContentHeader="true" enableLazyLoading="false"
+			upperCaseAnchorBar="false">
+			<objectPage:headerTitle>
+				<objectPage:ObjectPageHeader id="idS2P.MM.MSI.ObjectHeaderInvoiceStatus"
+					objectTitle="{= ${SupplierInvoice} === '' ? ${i18n>XTIT_NEW_DOCUMENT_OBJECT} : ${i18n>XTIT_DOCUMENT_OBJECT}}"
+					objectSubtitle="{= ${SupplierInvoice} === '' ? '' : ${SupplierInvoice} + '/' + ${FiscalYear}}">
+					<objectPage:actions>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonEdit" hideText="false"
+							press="doEditAction" text="{i18n>XBUT_EDIT}" type="Emphasized" visible="false"/>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonCancelInvoice" hideText="false"
+							press="doCancelInvoice" text="{i18n>XBUT_CANCEL_INVOICE}" visible="false"/>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonRelease" hideText="false"
+							press="doReleaseAction" text="{i18n>XBUT_RELEASE}" visible="false"/>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonDeleteInvoice" hideText="false"
+							press="doDeleteInvoice" text="{i18n>XBUT_DELETE_INVOICE}" visible="false"/>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonJournalEntries" hideText="false"
+							press="displayFollowDocuments" text="{i18n>XBUT_DISPLAY_JOURNAL_ENTRIES}"
+							visible="{= ${fullScreen>/EditMode} === true ? false : ${UxHasAccountingDocument} === true ? true : false}"/>
+						<objectPage:ObjectPageHeaderActionButton sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonShare"
+							visible="{= ${fullScreen>/EditMode} === true ? false : true }" press="handleButtonSharePopoverPress" icon="sap-icon://action"/>
+					</objectPage:actions>
+				</objectPage:ObjectPageHeader>
+			</objectPage:headerTitle>
+			<objectPage:headerContent>
+				<!--========================================================================================= -->
+				<!--Invoice Balance/ Invoice Gross Amount -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxBalance">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelBalance"
+						text="{= ${fullScreen>/EditMode} === false ? ${i18n>LBL_INVOICE_GROSS_AMOUNT} : ${i18n>LBL_INVOICE_BALANCE}}"
+						labelFor="idS2P.MM.MSI.ObjectNumberAmount"/>
+					<ObjectNumber id="idS2P.MM.MSI.ObjectNumberAmount"
+						number="{parts: [{path: 'fullScreen>/EditMode'}, {path: 'BalanceAmount'}, {path: 'InvoiceGrossAmount'}, {path:'DocumentCurrency'}],formatter: '.Conversions.formatInvoiceBalanceAndInvoiceGrossAmount'}"
+						unit="{DocumentCurrency}"
+						state="{= ${fullScreen>/EditMode} === false ? 'None' : ${SuplrInvcPostabilityStatus} === '01' ? 'Success' : ${SuplrInvcPostabilityStatus} === '02' ? 'Warning' : 'Error'}"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Invoicing Party -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxInvoicingParty">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelInvoicingParty" text="{i18n>LBL_INVOICING_PARTY}"
+						labelFor="idS2P.MM.MSI.SmartLinkInvoicingParty"/>
+					<smartLink:SmartLink id="idS2P.MM.MSI.SmartLinkInvoicingParty" beforePopoverOpens="onBeforeSmartLinkExternalAppNavigation"
+						text="{InvoicingParty}" semanticObject="Supplier">
+						<smartLink:innerControl>
+							<Text id="idS2P.MM.MSI.TextInvoicingParty" text="{InvoicingParty}"/>
+						</smartLink:innerControl>
+					</smartLink:SmartLink>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Invoice Reduction Amount (Manual) -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxInvoiceReductionManual"
+					visible="{path: 'TotalSuplrInvcManuallyReducedAmount', formatter: '.Conversions.getInvoiceReductionStatusVisibility'}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelManualInvoiceReduction" text="{i18n>LBL_INVOICE_REDUCTION_AMOUNT_MANUAL}"
+						labelFor="idS2P.MM.MSI.ObjectNumberManualInvoiceReduction"/>
+					<ObjectNumber id="idS2P.MM.MSI.ObjectNumberManualInvoiceReduction"
+						number="{parts:[{path:'TotalSuplrInvcManuallyReducedAmount'},{path:'DocumentCurrency'}], formatter:'.Conversions.formatObjectNumberAmountCurrency'}"
+						unit="{DocumentCurrency}" state="Warning"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Invoice Reduction Amount (Total-Based) -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxInvoiceReductionTotal"
+					visible="{path: 'SuplrInvcAutomReducedAmount', formatter: '.Conversions.getInvoiceReductionStatusVisibility'}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelAutomaticInvoiceReduction" text="{i18n>LBL_INVOICE_REDUCTION_AMOUNT_TOTAL_BASED}"
+						labelFor="idS2P.MM.MSI.ObjectNumberAutomaticInvoiceReduction"/>
+					<ObjectNumber id="idS2P.MM.MSI.ObjectNumberAutomaticInvoiceReduction"
+						number="{parts:[{path:'SuplrInvcAutomReducedAmount'}, {path:'DocumentCurrency'}], formatter:'.Conversions.formatObjectNumberAmountCurrency'}"
+						unit="{DocumentCurrency}" state="Warning"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Invoice Status and Origin Description -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxInvoiceStatus" visible="{= ${InvoiceStatusAndOriginDesc} !== '' ? true : false}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelInvoiceStatus" text="{i18n>LBL_INVOICE_DOCUMENT_STATUS}"
+						labelFor="idS2P.MM.MSI.ObjectStatusInvoiceStatus"/>
+					<ObjectStatus id="idS2P.MM.MSI.ObjectStatusInvoiceStatus" text="{InvoiceStatusAndOriginDesc}"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Reversal Information -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxReversalInformation" visible="{= ${ReverseDocument} !== '' ? true : false}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelReverseInformation"
+						text="{= ${IsReversed} === true ? ${i18n>LBL_CANCELED_BY} : ${IsReverseDocument} === true ? ${i18n>LBL_CANCELLATION_OF} : ''}"
+						labelFor="idS2P.MM.MSI.SmartLinkReversedDocument"/>
+					<smartLink:SmartLink id="idS2P.MM.MSI.SmartLinkReversedDocument" beforePopoverOpens="navigateToReversedDocument"
+						text="{= ${ReverseDocument} ? ${ReverseDocument} + '/' + ${ReverseDocumentFiscalYear} : ''}" semanticObject="SupplierInvoice">
+						<smartLink:innerControl>
+							<Text id="idS2P.MM.MSI.TextStatusReverseInformation"
+								text="{= ${ReverseDocument} ? ${ReverseDocument} + '/' + ${ReverseDocumentFiscalYear} : ''}"/>
+						</smartLink:innerControl>
+					</smartLink:SmartLink>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Payment Status -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxPaymentStatus" visible="{UxDisplayPaymentBlockDetails}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelPaymentBlockingReason" text="{i18n>LBL_PAYMENT_STATUS}"
+						labelFor="idS2P.MM.MSI.LinkPaymentBlockingReason"/>
+					<Link id="idS2P.MM.MSI.LinkPaymentBlockingReason" text="{i18n>PAYMENT_BLOCK_TEXT}" press="onPaymentBlockingReasonPress"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Approval Status -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxApprovalStatus" visible="{= ${fullScreen>/EditMode} === true || ${UxFcApprovalStatus} !== 1 ? false : true}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelWfApprovalStatus" text="{i18n>LBL_WF_APPROVAL_STATUS}"
+						labelFor="idS2P.MM.MSI.ObjectStatusWfApprovalStatus"/>
+					<ObjectStatus id="idS2P.MM.MSI.ObjectStatusWfApprovalStatus" text="{ApprovalStatus}"/>
+				</VBox>
+				<!--========================================================================================= -->
+				<!--Approver -->
+				<!--========================================================================================= -->
+				<VBox id="idS2P.MM.MSI.VBoxApprover" visible="{= ${fullScreen>/EditMode} === true || ${UxFcApprover} !== 1 ? false : true}">
+					<smartField:SmartLabel id="idS2P.MM.MSI.SmartLabelWfApprover" text="{i18n>LBL_WF_APPROVER_NAME}"
+						labelFor="idS2P.MM.MSI.ObjectStatusWfApprover"/>
+					<ObjectStatus id="idS2P.MM.MSI.ObjectStatusWfApprover" text="{Approver}"/>
+				</VBox>
+				
+			</objectPage:headerContent>
+			<objectPage:sections>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionSituations" title="{i18n>SITUATIONS}"
+					titleUppercase="false" visible="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionSituations">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Situations" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionHeader" title="{i18n>SECTIONS_HEADER}" titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionHeader">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Header" type="XML"/>
+							</objectPage:blocks>
+							<objectPage:moreBlocks>
+								<block:HeaderMore id="idS2P.MM.MSI.HeaderMore" columnLayout="4"/>
+							</objectPage:moreBlocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionReference" title="{i18n>SECTIONS_PO_REFERENCE}" titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionPurchaseOrderReference">
+							<objectPage:blocks>
+								<VBox>
+									<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.References" type="XML"/>
+									<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.PurchaseOrderReferenceItems" type="XML"/>
+								</VBox>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionIncompleteItems"
+					title="{i18n>SECTIONS_INCOMPLETE_ITEMS}" titleUppercase="false" visible="{HasIncompleteItems}">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionIncompleteItems">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.IncompleteItems" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionGLAccountItems" title="{i18n>SECTIONS_GL_ACCOUNT_ITEMS}"
+					titleUppercase="false" visible="{PostingToGLAcctIsActive}">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionGLAccountItems">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.GLAccountItems" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionTax" title="{i18n>SECTIONS_TAX}" titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionTax">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Tax" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionWithholdingTax"
+					title="{i18n>SECTIONS_WITHHOLDING_TAX}" titleUppercase="false" visible="{WithholdingTaxIsActive}">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionWithholdingTax">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.WithholdingTax" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionChinaVATInvoice"
+					title="{i18n>SECTIONS_CHINA_VAT_INVOICE}" titleUppercase="false" visible="{ChinaVATInvoiceIsActive}">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionChinaVATInvoice">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.ChinaVATInvoice" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionPayment" title="{i18n>SECTIONS_PAYMENT}" titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionPayment">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Payment" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionDeliveryCost" title="{i18n>SECTIONS_UNPLANNED_DELIVERY_COSTS}"
+					titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionUnplannedDeliveryCosts">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.UnplannedDeliveryCosts" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection id="idS2P.MM.MSI.ObjectPageSectionAttachments" title="{i18n>SECTIONS_ATTACHMENTS}" titleUppercase="false">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionAttachments">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Attachments" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionOutputManagement"
+					title="{i18n>SECTIONS_OUTPUT}" titleUppercase="false" visible="{HasMessagesFromOutputControl}">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionOutput">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Output" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+				<objectPage:ObjectPageSection sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ObjectPageSectionWorkflow"
+					title="{i18n>APPROVAL_DETAILS}" titleUppercase="false"
+					visible="true">
+					<objectPage:subSections>
+						<objectPage:ObjectPageSubSection id="idS2P.MM.MSI.ObjectPageSubSectionWorkflow">
+							<objectPage:blocks>
+								<core:Fragment fragmentName="ui.s2p.mm.supplinvoice.manage.s1.view.fragments.S1.Workflow" type="XML"/>
+							</objectPage:blocks>
+						</objectPage:ObjectPageSubSection>
+					</objectPage:subSections>
+				</objectPage:ObjectPageSection>
+			</objectPage:sections>
+		</objectPage:ObjectPageLayout>
+		<semantic:messagesIndicator>
+			<semantic:MessagesIndicator id="idS2P.MM.MSI.MessagesIndicatorMessageLog" press="onMessagesIndicatorPressed"/>
+		</semantic:messagesIndicator>
+		<semantic:customFooterContent>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonCheck" press="doCheckAction" text="{i18n>XBUT_CHECK}" type="Emphasized"
+				visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonSimulate" press="doSimulateAction" text="{i18n>XBUT_SIMULATE}"
+				visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonPost" press="doPostAction" text="{i18n>XBUT_POST}" visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonHold" press="doHoldAction" text="{i18n>XBUT_HOLD}" visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonPark" press="doParkAction" text="{i18n>XBUT_PARK}" visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonParkAsCompleted" press="doSaveAsCompletedAction"
+				text="{i18n>XBUT_SAVE_AS_COMPLETED}" visible="false" tooltip="{i18n>SAVE_AS_COMPLETED_TOOLTIP}"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonCancelDraft" press="doCancelDraftAction"
+				text="{path: 'SupplierInvoice', formatter: '.Conversions.getCancelDraftButtonText'}" visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonDiscard" press="doDiscardAction" text="{i18n>XBUT_DISCARD}"
+				visible="false"/>
+			<Button sap.ui.dt:designtime="not-adaptable" id="idS2P.MM.MSI.ButtonConfirm" press="doConfirmInvoice" text="{i18n>XBUT_CONFIRM}"
+				visible="false"/>
+		</semantic:customFooterContent>
+	</semantic:FullscreenPage>
+</mvc:View>

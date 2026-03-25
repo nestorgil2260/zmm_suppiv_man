@@ -1,0 +1,132 @@
+{
+    "_version": "1.1.0",
+    "sap.app": {
+        "_version": "1.1.0",
+        "id": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension",
+        "type": "application",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "title": "{{appTitle}}",
+        "dataSources": {
+            "ZMM_POPUP_4170V2_SRV": {
+                "uri": "/sap/opu/odata/sap/ZMM_POPUP_4170V2_SRV/",
+                "type": "OData",
+                "settings": {
+                    "localUri": "localService/ZMM_POPUP_4170V2_SRV/metadata.xml"
+                }
+            }
+        },
+        "sourceTemplate": {
+            "id": "servicecatalog.connectivityComponentForManifest",
+            "version": "0.0.0"
+        },
+        "i18n": "i18n/i18n.properties"
+    },
+    "sap.ui": {
+        "_version": "1.1.0",
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": false
+        },
+        "supportedThemes": [
+            "sap_hcb",
+            "sap_bluecrystal"
+        ]
+    },
+    "sap.ui5": {
+        "_version": "1.1.0",
+        "dependencies": {
+            "minUI5Version": "1.71.22",
+            "libs": {
+                "sap.ui.ux3": {
+                    "lazy": false
+                }
+            }
+        },
+        "componentUsages": {
+            "attachmentReuseComponent": {
+                "name": "sap.se.mi.plm.lib.attachmentservice.attachment",
+                "settings": {}
+            },
+            "paymentBlockReuseComponent": {
+                "name": "fin.ap.situationpage.invoicepaymentblock.component",
+                "settings": {}
+            },
+            "situationReuseComponent": {
+                "name": "s4.cfnd.sit.reuse.forFreeStyle",
+                "settings": {}
+            },
+            "outputControlReuseComponent": {
+                "name": "sap.ssuite.fnd.om.outputcontrol.outputitems",
+                "settings": {}
+            },
+            "goldenTaxReuseComponent": {
+                "name": "sap.gs.fin.lib.reusetaxinvc.binding",
+                "settings": {}
+            },
+            "glAccountItemsReuseComponent": {
+                "name": "sap.fin.acc.lib.codingblock.component",
+                "settings": {}
+            }
+        },
+        "extends": {
+            "component": "ui.s2p.mm.supplinvoice.manage.s1",
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "ui.s2p.mm.supplinvoice.manage.s1.controller.S1": {
+                        "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.S1Custom"
+                    },
+                    "ui.s2p.mm.supplinvoice.manage.s1.controller.HeaderMore": {
+                        "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.HeaderMoreCustom"
+                    },
+                    "ui.s2p.mm.supplinvoice.manage.s1.controller.App": {
+                        "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.AppCustom"
+                    }
+                },
+                "sap.ui.viewReplacements": {
+                    "ui.s2p.mm.supplinvoice.manage.s1.view.S1": {
+                        "viewName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.view.S1Custom",
+                        "type": "XML"
+                    },
+                    "ui.s2p.mm.supplinvoice.manage.s1.view.blocks.S1.HeaderMore": {
+                        "viewName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.view.blocks.S1.HeaderMoreCustom",
+                        "type": "XML"
+                    }
+                }
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "zModel": {
+                "type": "sap.ui.model.odata.v2.ODataModel",
+                "settings": {
+                    "defaultOperationMode": "Server",
+                    "defaultBindingMode": "OneWay",
+                    "defaultCountMode": "Request"
+                },
+                "dataSource": "ZMM_POPUP_4170V2_SRV",
+                "preload": true
+            },
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.i18n.i18n"
+                }
+            }
+        }
+    },
+    "sap.platform.abap": {
+        "uri": "/sap/bc/ui5_ui5/sap/zmm_suppiv_man/webapp",
+        "_version": "1.1.0"
+    }
+}

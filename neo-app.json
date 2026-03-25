@@ -1,0 +1,324 @@
+{
+  "welcomeFile": "/index.html",
+  "routes": [
+    {
+      "path": "/sap/opu/odata",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/opu/odata"
+      },
+      "description": "CAF_DEV_100"
+    },
+    {
+      "path": "/sap/bc/ui5_ui5",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5"
+      },
+      "description": "CAF_DEV_100"
+    },
+    {
+      "path": "/resources/sap/fin/acc/lib/codingblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_acc_lib_cb",
+        "preferLocal": true
+      },
+      "description": "sap/fin/acc/lib/codingblock Reuse Library"
+    },
+    {
+      "path": "/resources/s4/cfnd/sit/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/sit_ruses1",
+        "preferLocal": true
+      },
+      "description": "s4/cfnd/sit/reuse Reuse Library"
+    },
+    {
+      "path": "/resources/sap/gs/fin/lib/reusetaxinvc",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/glo_txi_reuse",
+        "preferLocal": true
+      },
+      "description": "sap/gs/fin/lib/reusetaxinvc Reuse Library"
+    },
+    {
+      "path": "/resources/fin/ap/situationpage/invoicepaymentblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_ivnpayspg",
+        "preferLocal": true
+      },
+      "description": "fin/ap/situationpage/invoicepaymentblock Reuse Library"
+    },
+    {
+      "path": "/resources/sap/io/bpm/sworkfloweditor/lib/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/nw_aps_bpm_lib",
+        "preferLocal": true
+      },
+      "description": "sap/io/bpm/sworkfloweditor/lib/reuse Reuse Library"
+    },
+    {
+      "path": "/resources/sap/ssuite/fnd/om/outputcontrol",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fnd_om_out_cls1",
+        "preferLocal": true
+      },
+      "description": "sap/ssuite/fnd/om/outputcontrol Reuse Library"
+    },
+    {
+      "path": "/resources/sap/se/mi/plm/lib/attachmentservice",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/plm_ath_cres1",
+        "preferLocal": true
+      },
+      "description": "sap/se/mi/plm/lib/attachmentservice Reuse Library"
+    },
+    {
+      "path": "/resources/sap/s4h/cfnd/featuretoggle",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/featuretoggles1",
+        "preferLocal": true
+      },
+      "description": "sap/s4h/cfnd/featuretoggle Reuse Library"
+    },
+    {
+      "path": "/resources/sap/fin/acc/lib/codingblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_acc_lib_cb",
+        "preferLocal": true
+      },
+      "description": "sap/fin/acc/lib/codingblock Reuse Library"
+    },
+    {
+      "path": "/resources/s4/cfnd/sit/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/sit_ruses1",
+        "preferLocal": true
+      },
+      "description": "s4/cfnd/sit/reuse Reuse Library"
+    },
+    {
+      "path": "/resources/sap/gs/fin/lib/reusetaxinvc",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/glo_txi_reuse",
+        "preferLocal": true
+      },
+      "description": "sap/gs/fin/lib/reusetaxinvc Reuse Library"
+    },
+    {
+      "path": "/resources/fin/ap/situationpage/invoicepaymentblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_ivnpayspg",
+        "preferLocal": true
+      },
+      "description": "fin/ap/situationpage/invoicepaymentblock Reuse Library"
+    },
+    {
+      "path": "/resources/sap/io/bpm/sworkfloweditor/lib/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/nw_aps_bpm_lib",
+        "preferLocal": true
+      },
+      "description": "sap/io/bpm/sworkfloweditor/lib/reuse Reuse Library"
+    },
+    {
+      "path": "/resources/sap/ssuite/fnd/om/outputcontrol",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fnd_om_out_cls1",
+        "preferLocal": true
+      },
+      "description": "sap/ssuite/fnd/om/outputcontrol Reuse Library"
+    },
+    {
+      "path": "/resources/sap/se/mi/plm/lib/attachmentservice",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/plm_ath_cres1",
+        "preferLocal": true
+      },
+      "description": "sap/se/mi/plm/lib/attachmentservice Reuse Library"
+    },
+    {
+      "path": "/resources/sap/s4h/cfnd/featuretoggle",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/featuretoggles1",
+        "preferLocal": true
+      },
+      "description": "sap/s4h/cfnd/featuretoggle Reuse Library"
+    },
+    {
+      "path": "/resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Resources"
+    },
+    {
+      "path": "/test-resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/test-resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Test Resources"
+    },
+    {
+      "path": "/dist/resources/sap/fin/acc/lib/codingblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_acc_lib_cb",
+        "preferLocal": true
+      },
+      "description": "sap/fin/acc/lib/codingblock Reuse Library"
+    },
+    {
+      "path": "/dist/resources/s4/cfnd/sit/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/sit_ruses1",
+        "preferLocal": true
+      },
+      "description": "s4/cfnd/sit/reuse Reuse Library"
+    },
+    {
+      "path": "/dist/resources/sap/gs/fin/lib/reusetaxinvc",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/glo_txi_reuse",
+        "preferLocal": true
+      },
+      "description": "sap/gs/fin/lib/reusetaxinvc Reuse Library"
+    },
+    {
+      "path": "/dist/resources/fin/ap/situationpage/invoicepaymentblock",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fin_ivnpayspg",
+        "preferLocal": true
+      },
+      "description": "fin/ap/situationpage/invoicepaymentblock Reuse Library"
+    },
+    {
+      "path": "/dist/resources/sap/io/bpm/sworkfloweditor/lib/reuse",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/nw_aps_bpm_lib",
+        "preferLocal": true
+      },
+      "description": "sap/io/bpm/sworkfloweditor/lib/reuse Reuse Library"
+    },
+    {
+      "path": "/dist/resources/sap/ssuite/fnd/om/outputcontrol",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/fnd_om_out_cls1",
+        "preferLocal": true
+      },
+      "description": "sap/ssuite/fnd/om/outputcontrol Reuse Library"
+    },
+    {
+      "path": "/dist/resources/sap/se/mi/plm/lib/attachmentservice",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/plm_ath_cres1",
+        "preferLocal": true
+      },
+      "description": "sap/se/mi/plm/lib/attachmentservice Reuse Library"
+    },
+    {
+      "path": "/dist/resources/sap/s4h/cfnd/featuretoggle",
+      "target": {
+        "type": "destination",
+        "name": "CAF_DEV_100",
+        "entryPath": "/sap/bc/ui5_ui5/sap/featuretoggles1",
+        "preferLocal": true
+      },
+      "description": "sap/s4h/cfnd/featuretoggle Reuse Library"
+    },
+    {
+      "path": "/dist/resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Resources"
+    },
+    {
+      "path": "/dist/test-resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/test-resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Test Resources"
+    },
+    {
+      "path": "/resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Resources"
+    },
+    {
+      "path": "/test-resources",
+      "target": {
+        "type": "service",
+        "name": "sapui5",
+        "entryPath": "/test-resources",
+        "version": "1.71.36"
+      },
+      "description": "SAPUI5 Test Resources"
+    }
+  ],
+  "sendWelcomeFileRedirect": true
+}

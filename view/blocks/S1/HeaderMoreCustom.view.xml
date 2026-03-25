@@ -1,0 +1,105 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns:smartField="sap.ui.comp.smartfield"
+	xmlns:smartForm="sap.ui.comp.smartform" xmlns="sap.m" controllerName="ui.s2p.mm.supplinvoice.manage.s1.controller.HeaderMore"
+	xmlns:f="sap.ui.layout.form" id="idS2P.MM.MSI.ViewHeaderMore">
+	<f:SimpleForm class="editableForm" columnsL="2" columnsM="1" editable="true" id="idS2P.MM.MSI.CESimpleFormCancelInvoice" labelSpanL="4"
+		labelSpanM="4" layout="ResponsiveGridLayout">
+		<f:content>
+			<!--========================================================================================= -->
+			<!--Bill of Ladings Number -->
+			<!--========================================================================================= -->
+			<Label text="Clave referencia 1" width="100%" id="label0"/>
+			<Input id="idS2P.MM.MSI.InputAssignmentReferenceZ" value="{AssignmentReference}" showValueHelp="true" showSuggestion="true" fieldWidth="40%"
+				liveChange="onAfterRendering" valueHelpRequest="onValueHelpInputAssignmentReferenceZ"></Input>
+			<Label text="Clave referencia 2" width="100%" id="label2"/>
+			<Input id="idS2P.MM.MSI.InputAssignmentReference2Z" value="{AccountingDocumentHeaderText}"	fieldWidth="40%"
+				liveChange="onAfterRendering" valueHelpRequest="onSearchXref2" showValueHelp="true" valueHelpOnly="true"></Input>
+		</f:content>
+	</f:SimpleForm>
+	<smartForm:SmartForm editable="{fullScreen>/EditMode}" entityType="Header" id="S2P.MM.MSI.SmartFormGeneralDataMore"
+		ignoredFields="NodeKey,State,RootKey,ChangeStateId,BusinessPlace,SupplierInvoice,FiscalYear,InvoiceReceiptDate,PaymentMethodSupplement,Transaction,TransactionDescription,IsInvoice,CompanyCode,DocumentDate,PostingDate,Reference,InvoicingParty,InvoicingPartyName,InvoiceGrossAmount,DocumentCurrency,PaymentBlockingReason,PaymentReference,DueCalculationBaseDate,NetDueDate,ManualCashDiscount,PaymentMethod,InvoiceReference,InvoiceReferenceFiscalYear,PaymentTerms,CashDiscount1Days,CashDiscount1Percent,CashDiscount2Days,CashDiscount2Percent,NetPaymentDays,PORSubscriberNumber,PORCheckDigit,PORReferenceNumber,FixedCashDiscount,CompanyCodeCountry,TaxAmount,TaxCode,TaxCalculationProcedure,UnplannedDeliveryCostAmount,UnplannedDeliveryCostTaxCode,UnplannedDeliveryCostTaxJurisdiction,UnplndDelivCostTaxJurisByPrvdr,ReferenceDocumentCategory,PartnerBankAccountInternalID,BankName,SWIFTCode,IBAN,TaxJurisdictionIsActive,ExternalTaxJurisdictionIsActive,InternalTaxJurisdictionIsActive,InvoiceStatusAndOriginDesc,IsReversed,IsReverseDocument,ReverseDocument,ReverseDocumentFiscalYear,UxPostEnabled,UxSimulateEnabled,UxDiscardEnabled,UxConfirmEnabled,UxCancelEnabled,UxReleaseEnabled,UxCancelDraftEnabled,UxHoldEnabled,UxDeleteInvoiceEnabled,UxEditEnabled">
+		<smartForm:layout>
+			<smartForm:Layout labelSpanXL="12" labelSpanL="12" labelSpanM="12" labelSpanS="12" singleGroupFullSize="false"
+				id="idS2P.MM.MSI.LayoutHeaderMore"/>
+		</smartForm:layout>
+		<!--========================================================================================= -->
+		<!--Header More section -->
+		<!--========================================================================================= -->
+		<smartForm:Group id="idS2P.MM.MSI.SmartGroupHeaderMoreDataGroup1" label="{i18n>LBL_GROUP_DETAILS}">
+			<!--========================================================================================= -->
+			<!--Document Type -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementAccountingDocumentType">
+				<smartField:SmartField change="onControlChanged" id="idS2P.MM.MSI.InputAccountingDocumentType" value="{AccountingDocumentType}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--Assignment Number -->
+			<!--========================================================================================= -->
+			<!--<Input id="idS2P.MM.MSI.InputMultiBillOfLadingsNo" placeholder="{i18n>TXTPROMPT_BILL_OF_LADING_NO}"-->
+			<!--	value="{AssignmentReference}" showValueHelp="true" showSuggestion="true">					-->
+			<!--</Input>-->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementAssignmentReference">
+				<smartField:SmartField id="idS2P.MM.MSI.InputAssignmentReference" value="{AssignmentReference}" visible="false"/>
+			</smartForm:GroupElement>
+			<!--innerControlsCreated="onControlAssignmentReferenceCreated"-->
+			<!--========================================================================================= -->
+			<!--State Central Bank Indicator-->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementItemCBPReason">
+				<smartField:SmartField change="onControlChanged" id="idS2P.MM.MSI.InputStateCentralBankPaymentReason"
+					value="{StateCentralBankPaymentReason}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--Supplying Country-->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupSupplyingCountry">
+				<smartField:SmartField change="onControlChanged" id="idS2P.MM.MSI.InputSupplyingCountry" value="{SupplyingCountry}"/>
+			</smartForm:GroupElement>
+		</smartForm:Group>
+		<smartForm:Group id="idS2P.MM.MSI.SmartGroupHeaderMoreDataGroup2" label="{= ${i18n>LBL_GROUP_DETAILS} ? ' ' : ' '}">
+			<!--========================================================================================= -->
+			<!--Exchange Rate -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementExchangeRate">
+				<smartField:SmartField id="idS2P.MM.MSI.InputExchangeRate" value="{ExchangeRate}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--DeliveryOfGoodsReportingCntry -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementDeliveryOfGoodsReportingCntry">
+				<smartField:SmartField id="idS2P.MM.MSI.InputDeliveryOfGoodsReportingCntry" value="{DeliveryOfGoodsReportingCntry}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--IsEUTriangularDeal -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementIsEUTriangularDeal">
+				<smartField:SmartField id="idS2P.MM.MSI.InputIsEUTriangularDeal" value="{IsEUTriangularDeal}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--SupplierVATRegistration -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementSupplierVATRegistration">
+				<smartField:SmartField id="idS2P.MM.MSI.InputSupplierVATRegistration" value="{SupplierVATRegistration}"/>
+			</smartForm:GroupElement>
+		</smartForm:Group>
+		<smartForm:Group id="idS2P.MM.MSI.SmartGroupHeaderMoreDataGroup3" label="{= ${i18n>LBL_GROUP_DETAILS} ? ' ' : ' '}">
+			<!--========================================================================================= -->
+			<!--Header Text (BKTXT) -->
+			<!--========================================================================================= -->
+			<!--<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementAccountingDocumentHeaderText">-->
+			<!--	<smartField:SmartField id="idS2P.MM.MSI.InputAccountingDocumentHeaderText" value="{AccountingDocumentHeaderText}" visible="false"/>-->
+			<!--</smartForm:GroupElement>-->
+			<!--========================================================================================= -->
+			<!--Note for Financial Accounting (SGTXT) -->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementItemText">
+				<smartField:SmartField id="idS2P.MM.MSI.InputItemText" value="{SupplierPostingLineItemText}"/>
+			</smartForm:GroupElement>
+			<!--========================================================================================= -->
+			<!--Business Area-->
+			<!--========================================================================================= -->
+			<smartForm:GroupElement id="idS2P.MM.MSI.SmartGroupElementBusinessArea">
+				<smartField:SmartField id="idS2P.MM.MSI.InputBusinessArea" value="{BusinessArea}"/>
+			</smartForm:GroupElement>
+		</smartForm:Group>
+	</smartForm:SmartForm>
+</mvc:View>

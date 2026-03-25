@@ -1,0 +1,5 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<SelectDialog noDataText="No se encontraron datos" title="Empleados" confirm="handleTableValueHelpConfirm" cancel="handleTableValueHelpCancel" search="onSearchXref2LiveChange"
+		growingThreshold="20" contentWidth="20%" contentHeight="50%" growing="true"><StandardListItem/>
+	</SelectDialog>
+</core:FragmentDefinition>
