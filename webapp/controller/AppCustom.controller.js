@@ -12,18 +12,6 @@ sap.ui.define([
 	"use strict";
 	var g = sap.ui.controller("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.AppCustom", {
 		getS1Controller: function () {
-
-				if (this.getView()) {
-
-					var XREF1 = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-						"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-					if (XREF1) {
-						XREF1.setVisible(false);
-					}
-
-				}
-
 				return this.oS1Controller;
 			}
 			//    _initCrossApplicationNavigation: function () {

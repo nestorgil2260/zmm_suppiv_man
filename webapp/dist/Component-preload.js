@@ -1,7 +1,0 @@
-//@ui5-bundle ui/s2p/mm/supplinvoice/manage/s1/ZMM_SUPPIV_MANS1Extension/Component-preload.js
-jQuery.sap.registerPreloadedModules({
-"version":"2.0",
-"modules":{
-	"ui/s2p/mm/supplinvoice/manage/s1/ZMM_SUPPIV_MANS1Extension/Component.js":function(){jQuery.sap.declare("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.Component");sap.ui.component.load({name:"ui.s2p.mm.supplinvoice.manage.s1",url:"/sap/bc/ui5_ui5/sap/MM_SUPPIV_MANS1"});this.ui.s2p.mm.supplinvoice.manage.s1.Component.extend("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.Component",{metadata:{manifest:"json"}});
-}
-}});

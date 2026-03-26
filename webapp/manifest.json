@@ -19,7 +19,8 @@
         },
         "sourceTemplate": {
             "id": "servicecatalog.connectivityComponentForManifest",
-            "version": "0.0.0"
+            "version": "0.0.0",
+            "toolsId": "b5f8510b-409f-43cd-b5fb-4811658c54a0"
         },
         "i18n": "i18n/i18n.properties"
     },
@@ -80,24 +81,14 @@
             "component": "ui.s2p.mm.supplinvoice.manage.s1",
             "extensions": {
                 "sap.ui.controllerExtensions": {
-                    "ui.s2p.mm.supplinvoice.manage.s1.controller.S1": {
-                        "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.S1Custom"
-                    },
                     "ui.s2p.mm.supplinvoice.manage.s1.controller.HeaderMore": {
                         "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.HeaderMoreCustom"
                     },
+                    "ui.s2p.mm.supplinvoice.manage.s1.controller.S1": {
+                        "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.S1Custom"
+                    },
                     "ui.s2p.mm.supplinvoice.manage.s1.controller.App": {
                         "controllerName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.AppCustom"
-                    }
-                },
-                "sap.ui.viewReplacements": {
-                    "ui.s2p.mm.supplinvoice.manage.s1.view.S1": {
-                        "viewName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.view.S1Custom",
-                        "type": "XML"
-                    },
-                    "ui.s2p.mm.supplinvoice.manage.s1.view.blocks.S1.HeaderMore": {
-                        "viewName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.view.blocks.S1.HeaderMoreCustom",
-                        "type": "XML"
                     }
                 }
             }
@@ -116,12 +107,6 @@
                 },
                 "dataSource": "ZMM_POPUP_4170V2_SRV",
                 "preload": true
-            },
-            "i18n": {
-                "type": "sap.ui.model.resource.ResourceModel",
-                "settings": {
-                    "bundleName": "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.i18n.i18n"
-                }
             }
         }
     },

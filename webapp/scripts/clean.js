@@ -3,7 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const projectRoot = path.join(__dirname, '..');
+const appRoot = path.join(__dirname, '..');
+const projectRoot = path.join(appRoot, '..');
 const distDir = path.join(projectRoot, 'dist');
 
 function removeDir(dir) {

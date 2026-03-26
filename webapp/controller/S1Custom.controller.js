@@ -1,24 +1,58 @@
 sap.ui.define([
-	"ui/s2p/mm/supplinvoice/manage/s1/controller/FullScreenController",
 	"ui/s2p/mm/supplinvoice/manage/s1/utils/Constants",
 	"ui/s2p/mm/supplinvoice/manage/s1/utils/CommonHelper",
 	"ui/s2p/mm/supplinvoice/manage/s1/utils/ODataHelper",
 	"ui/s2p/mm/supplinvoice/manage/s1/utils/Conversions",
 	"ui/s2p/mm/supplinvoice/manage/s1/utils/MessageHelper",
-	"ui/s2p/mm/supplinvoice/manage/s1/utils/types/Numchar",
-	"ui/s2p/mm/supplinvoice/manage/s1/controller/dialogs/ConfirmInvoice.controller",
-	"ui/s2p/mm/supplinvoice/manage/s1/controller/dialogs/CancelInvoice.controller",
-	"ui/s2p/mm/supplinvoice/manage/s1/controller/dialogs/AdvancedInvoice.controller",
-	"ui/s2p/mm/supplinvoice/manage/s1/controller/popovers/ShareInvoice.controller",
-	"sap/m/MessageBox",
-	"sap/base/util/UriParameters"
-], function (F, C, a, O, b, M, N, h, j, k, l, m, U) {
+	"sap/m/MessageBox"
+], function (C, a, O, b, M, m) {
 	"use strict";
 	var n = sap.ui.controller("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.S1Custom", {
 		Conversions: b,
 		ODataHelper: O,
 		CommonHelper: a,
 		_dialogGlobal: null,
+		_getXrefStateModel: function () {
+			var oComponent = this.getOwnerComponent && this.getOwnerComponent();
+			return oComponent ? oComponent.getModel("xrefState") : null;
+		},
+
+		_getXref2Status: function () {
+			var oStateModel = this._getXrefStateModel();
+
+			if (oStateModel) {
+				return oStateModel.getProperty("/xref2Status") || "X";
+			}
+
+			return "X";
+		},
+
+		_setXref2Status: function (sStatus) {
+			var oStateModel = this._getXrefStateModel();
+
+			if (oStateModel) {
+				oStateModel.setProperty("/xref2Status", sStatus || "");
+			}
+		},
+
+		_getHeaderContextValue: function (sProperty) {
+			var oContext = this.getView().getBindingContext();
+
+			if (oContext && typeof oContext.getProperty === "function") {
+				return oContext.getProperty(sProperty) || "";
+			}
+
+			return "";
+		},
+
+		_setHeaderContextValue: function (sProperty, vValue) {
+			var oContext = this.getView().getBindingContext();
+			var oModel = oContext && oContext.getModel && oContext.getModel();
+
+			if (oContext && oModel && typeof oModel.setProperty === "function") {
+				oModel.setProperty(oContext.getPath() + "/" + sProperty, vValue);
+			}
+		},
 		// setJournalEntriesButtonEnabled: function () {
 		// 	if (!this.oCrossAppNavigator) {
 		// 		this.oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
@@ -52,119 +86,23 @@ sap.ui.define([
 		// 	M.restoreMessages();
 
 		// },
-		onModelInitialized: function (o) {
-
-			var that = this;
-
-			var D = this.oModelFacade.getDraftId();
-			var s = this.getMode();
-			this.getView().setBindingContext(o);
-			this.setButtonVisibility();
-			this.initializeReuseComponents(D, s);
-			this.getModelFacade().resetChanges();
-			this._rebindTables();
-			this._setIgnoredTableFields(o.getPath());
-			this.determineInnerNavigationPath(D, s, o);
-			this.initReferencesHandling();
-
-			//TODO
-
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1) {
-
-				XREF1.setVisible(false);
-
-				XREF1.addEventDelegate({
-					onAfterRendering: function () {
-
-						var XREF1 = that.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-						if (XREF1) {
-
-							XREF1.setVisible(false);
-
-						}
-
-					}
-				});
-			}
-
-			var CEInputCompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-
-			if (CEInputCompanyCode) {
-
-				CEInputCompanyCode.attachChange(this.CompanyCodeChange, this);
-
-				if (CEInputCompanyCode.getValue() === "3000") {
-
-					var xref2_lab = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--label2");
-
-					if (xref2_lab) {
-
-						xref2_lab.setRequired(true);
-					}
-
-				}
-			}
-
-			var amount = this.getView().byId("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
-
-			if (amount) {
-				var zXREF1 = sap.ui.getCore().byId(this.getView()._sOwnerId +
-					"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReferenceZ");
-
-				if (zXREF1) {
-					zXREF1.setValueHelpOnly(true);
-					zXREF1.setEditable(amount.getEditable());
-					zXREF1.setRequired(true);
-				}
-
-				var zXREF2 = sap.ui.getCore().byId(this.getView()._sOwnerId +
-					"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (zXREF2) {
-					zXREF2.setEditable(amount.getEditable());
-				}
-
-				if (CEInputCompanyCode.getValue() === "3000") {
-
-					amount.attachChange(this.amountChange, this);
-
-				}
-			}
-		},
-
 		amountChange: function (oEvent) {
 
 			var CEInputCompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var oStateModel = this._getXrefStateModel();
 
 			if (CEInputCompanyCode) {
 
 				if (CEInputCompanyCode.getValue() === "3000") {
+					this._setHeaderContextValue("AccountingDocumentHeaderText", "");
+					this._setXref2Status("");
 
-					var zXREF2 = sap.ui.getCore().byId(this.getView()._sOwnerId +
-						"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
+					if (oStateModel && !oStateModel.getProperty("/amountChangeWarningShown")) {
+						sap.m.MessageBox.information(
+							"Debido a la modificación del Importe bruto fact. es necesario seleccionar nuevamente una Clave de referencia 2 valida"
+						);
 
-					if (zXREF2) {
-						zXREF2.setValue("");
-
-						zXREF2.data("noError", "", true);
-
-						if (zXREF2.data("mensajeDuplicado") === "") {
-
-							sap.m.MessageBox.information(
-								"Debido a la modificación del Importe bruto fact. es necesario seleccionar nuevamente una Clave de referencia 2 valida"
-							);
-
-							zXREF2.data("mensajeDuplicado", "X", true);
-
-						} else {
-
-							zXREF2.data("mensajeDuplicado", "", true);
-
-						}
-
+						oStateModel.setProperty("/amountChangeWarningShown", true);
 					}
 				}
 			}
@@ -173,10 +111,9 @@ sap.ui.define([
 		CompanyCodeChange: function (oEvent) {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var xref2 = this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--label2");
 
 				if (xref2) {
 
@@ -184,12 +121,12 @@ sap.ui.define([
 				}
 
 			} else {
-				xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--label2");
-
 				if (xref2) {
 
 					xref2.setRequired(false);
 				}
+
+				this._setXref2Status("X");
 			}
 		},
 
@@ -308,114 +245,28 @@ sap.ui.define([
 		// 	t.rebindTable(true);
 		// },
 
-		onAfterRendering: function (oEvent) {
-
-			var that = this;
-
-			var seeMore = this.getView().byId("idS2P.MM.MSI.ObjectPageSubSectionHeader--seeMore");
-
-			if (seeMore) {
-
-				seeMore.attachPress(this.onSeeMorePress, this);
-
-			}
-
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (!XREF1 && seeMore) {
-
-				seeMore.firePress();
-
-			}
-
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1) {
-
-				XREF1.setVisible(false);
-
-				XREF1.addEventDelegate({
-					onAfterRendering: function () {
-
-						var XREF1 = that.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-						if (XREF1) {
-
-							XREF1.setVisible(false);
-
-						}
-
-					}
-				});
-			}
-
-			var amount = this.getView().byId("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
-
-			if (amount) {
-				var zXREF1 = sap.ui.getCore().byId(this.getView()._sOwnerId +
-					"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReferenceZ");
-
-				if (zXREF1) {
-					zXREF1.setValueHelpOnly(true);
-					zXREF1.setEditable(amount.getEditable());
-					zXREF1.setRequired(true);
-				}
-
-				var zXREF2 = sap.ui.getCore().byId(this.getView()._sOwnerId +
-					"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (zXREF2) {
-					zXREF2.setEditable(amount.getEditable());
-				}
-			}
-
-			var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-			if (xref2) {
-
-			}
-
-		},
-
-		onSeeMorePress: function (oEvent) {
-
-			var c = 1;
-
-		},
-
-		onRoutePatternMatched: function (event) {
-			var c = 1;
-		},
-
 		doPostAction: function () {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (xref2 && xref2.getValue().length === 0) {
+				if (!sAccountingDocumentHeaderText) {
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return;
-				} else if (!xref2) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "") {
+				} else if (sXref2Status === "") {
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "B") {
+				} else if (sXref2Status === "B") {
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return;
 				}
 
 			}
 
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1 && XREF1.getValue().length === 0) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else if (!XREF1) {
+			if (!sAssignmentReference) {
 				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
 			} else {
 
@@ -607,32 +458,25 @@ sap.ui.define([
 		doCheckAction: function () {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (xref2 && xref2.getValue().length === 0) {
+				if (!sAccountingDocumentHeaderText) {
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return;
-				} else if (!xref2) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "") {
+				} else if (sXref2Status === "") {
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "B") {
+				} else if (sXref2Status === "B") {
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return;
 				}
 
 			}
 
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1 && XREF1.getValue().length === 0) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else if (!XREF1) {
+			if (!sAssignmentReference) {
 				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
 			} else {
 
@@ -808,32 +652,25 @@ sap.ui.define([
 		doSimulateAction: function () {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (xref2 && xref2.getValue().length === 0) {
+				if (!sAccountingDocumentHeaderText) {
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return;
-				} else if (!xref2) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "") {
+				} else if (sXref2Status === "") {
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "B") {
+				} else if (sXref2Status === "B") {
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return;
 				}
 
 			}
 
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1 && XREF1.getValue().length === 0) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else if (!XREF1) {
+			if (!sAssignmentReference) {
 				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
 			} else {
 
@@ -1647,32 +1484,25 @@ sap.ui.define([
 		doSaveAsCompletedAction: function () {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (xref2 && xref2.getValue().length === 0) {
+				if (!sAccountingDocumentHeaderText) {
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return;
-				} else if (!xref2) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "") {
+				} else if (sXref2Status === "") {
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "B") {
+				} else if (sXref2Status === "B") {
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return;
 				}
 
 			}
 
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1 && XREF1.getValue().length === 0) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else if (!XREF1) {
+			if (!sAssignmentReference) {
 				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
 			} else {
 
@@ -1694,32 +1524,25 @@ sap.ui.define([
 		doHoldParkAction: function (o, s) {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference2Z");
-
-				if (xref2 && xref2.getValue().length === 0) {
+				if (!sAccountingDocumentHeaderText) {
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return;
-				} else if (!xref2) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "") {
+				} else if (sXref2Status === "") {
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return;
-				} else if (xref2 && xref2.data("noError") && xref2.data("noError") === "B") {
+				} else if (sXref2Status === "B") {
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return;
 				}
 
 			}
 
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1 && XREF1.getValue().length === 0) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else if (!XREF1) {
+			if (!sAssignmentReference) {
 				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
 			} else {
 

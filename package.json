@@ -1,26 +1,43 @@
 {
-  "name": "zmm-suppiv-man",
-  "version": "1.0.0",
+  "name": "ui.s2p.mm.supplinvoice.manage.s1.zmm_suppiv_mans1extension",
+  "version": "0.0.1",
   "description": "Supplier Invoice Management - S/4HANA 2025 Extension",
   "scripts": {
-    "build": "npm run build:dist",
-    "build:dist": "node scripts/build.js",
-    "clean": "node scripts/clean.js",
-    "prepare": "npm install"
+    "build:dist": "node webapp/scripts/build.js",
+    "build:ui5": "ui5 build -a --clean-dest --include-task=generateCachebusterInfo",
+    "clean": "node webapp/scripts/clean.js",
+    "prepare": "npm install",
+    "build_old": "npm run build:dist",
+    "start": "fiori run --open \"test/flpSandbox.html?sap-client=100&sap-ui-xx-viewCache=false#app-tile\"",
+    "start-local": "fiori run --config ./ui5-local.yaml --open \"test/flpSandboxMockServer.html?sap-client=100&sap-ui-xx-viewCache=false#app-tile\"",
+    "start-noflp": "fiori run --open \"index.html?sap-client=100&sap-ui-xx-viewCache=false\"",
+    "start-variants-management": "fiori run --open \"preview.html?sap-client=100&sap-ui-xx-viewCache=false&fiori-tools-rta-mode=true&sap-ui-rta-skip-flex-validation=true#preview-app\"",
+    "build": "node webapp/scripts/build.js",
+    "deploy": "fiori verify",
+    "deploy-config": "fiori add deploy-config",
+    "start-mock": "fiori run --open \"test/flpSandboxMockServer.html?sap-client=100&sap-ui-xx-viewCache=false#app-tile\""
   },
   "keywords": [
     "fiori",
-    "ui5",
     "s4hana",
-    "supplier-invoice"
+    "supplier-invoice",
+    "ui5",
+    "openui5",
+    "sapui5"
   ],
   "author": "SAP",
   "license": "SAP",
   "devDependencies": {
     "uglify-js": "^3.17.0",
-    "copyfiles": "^2.4.1"
+    "copyfiles": "^2.4.1",
+    "@ui5/cli": "^4.0.0",
+    "@sap/ux-ui5-tooling": "1",
+    "rimraf": "6.0.1"
   },
   "engines": {
     "node": ">=14.0.0"
-  }
+  },
+  "private": true,
+  "sapuxLayer": "CUSTOMER_BASE",
+  "main": "webapp/index.html"
 }

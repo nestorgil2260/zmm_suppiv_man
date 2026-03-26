@@ -1,0 +1,160 @@
+specVersion: "4.0"
+metadata:
+  name: ui.s2p.mm.supplinvoice.manage.s1.zmm_suppiv_mans1extension
+type: application
+framework:
+  name: SAPUI5
+  version: 1.79.0
+  libraries:
+    - name: sap.ui.ux3
+    - name: sap.f
+    - name: sap.m
+    - name: sap.ui.comp
+    - name: sap.ui.core
+    - name: sap.ui.generic.app
+    - name: sap.ui.table
+    - name: sap.ushell
+    - name: themelib_sap_bluecrystal
+    - name: themelib_sap_fiori_3
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertErrors: false
+        backend:
+          - path: /sap
+            url: ""
+            client: "100"
+            destination: CAF_DEV_100
+          - path: /resources/sap/fin/acc/lib/codingblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_acc_lib_cb
+          - path: /resources/s4/cfnd/sit/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/sit_ruses1
+          - path: /resources/sap/gs/fin/lib/reusetaxinvc
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/glo_txi_reuse
+          - path: /resources/fin/ap/situationpage/invoicepaymentblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_ivnpayspg
+          - path: /resources/sap/io/bpm/sworkfloweditor/lib/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/nw_aps_bpm_lib
+          - path: /resources/sap/ssuite/fnd/om/outputcontrol
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fnd_om_out_cls1
+          - path: /resources/sap/se/mi/plm/lib/attachmentservice
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/plm_ath_cres1
+          - path: /resources/sap/s4h/cfnd/featuretoggle
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/featuretoggles1
+          - path: /resources/sap/fin/acc/lib/codingblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_acc_lib_cb
+          - path: /resources/s4/cfnd/sit/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/sit_ruses1
+          - path: /resources/sap/gs/fin/lib/reusetaxinvc
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/glo_txi_reuse
+          - path: /resources/fin/ap/situationpage/invoicepaymentblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_ivnpayspg
+          - path: /resources/sap/io/bpm/sworkfloweditor/lib/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/nw_aps_bpm_lib
+          - path: /resources/sap/ssuite/fnd/om/outputcontrol
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fnd_om_out_cls1
+          - path: /resources/sap/se/mi/plm/lib/attachmentservice
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/plm_ath_cres1
+          - path: /resources/sap/s4h/cfnd/featuretoggle
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/featuretoggles1
+          - path: /dist/resources/sap/fin/acc/lib/codingblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_acc_lib_cb
+          - path: /dist/resources/s4/cfnd/sit/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/sit_ruses1
+          - path: /dist/resources/sap/gs/fin/lib/reusetaxinvc
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/glo_txi_reuse
+          - path: /dist/resources/fin/ap/situationpage/invoicepaymentblock
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fin_ivnpayspg
+          - path: /dist/resources/sap/io/bpm/sworkfloweditor/lib/reuse
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/nw_aps_bpm_lib
+          - path: /dist/resources/sap/ssuite/fnd/om/outputcontrol
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/fnd_om_out_cls1
+          - path: /dist/resources/sap/se/mi/plm/lib/attachmentservice
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/plm_ath_cres1
+          - path: /dist/resources/sap/s4h/cfnd/featuretoggle
+            destination: CAF_DEV_100
+            url: ""
+            client: "100"
+            pathPrefix: /sap/bc/ui5_ui5/sap/featuretoggles1
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+        delay: 300
+    - name: fiori-tools-preview
+      afterMiddleware: fiori-tools-appreload
+      configuration:
+        component: ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension
+        ui5Theme: sap_fiori_3

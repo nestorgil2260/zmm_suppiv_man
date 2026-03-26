@@ -1,4 +1,7 @@
-sap.ui.define(["sap/ui/core/mvc/Controller"], function (C) {
+sap.ui.define([
+	"sap/ui/core/mvc/Controller",
+	"sap/ui/model/json/JSONModel"
+], function (C, J) {
 	"use strict";
 	var H = sap.ui.controller("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.HeaderMoreCustom", {
 		//    onControlChanged: function (e) {
@@ -6,62 +9,193 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (C) {
 		//    }
 
 		onInit: function () {
-			var labelassigment = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
-
-			if (labelassigment) {
-
-				labelassigment.setRequired(true);
-				labelassigment.setText("XRef1");
-			}
-
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
-
-			if (XREF1) {
-
-				XREF1.setVisible(false);
-
-			}
-
-			this.oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-			this.oRouter.getTarget("details").attachDisplay(jQuery.proxy(this.onAfterRendering, this));
-
-			var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-			oRouter.attachRouteMatched(this._onObjectMatched, this);
-
+			this._ensureStateModel();
 		},
 
-		_onObjectMatched: function (oEvent) {
+		_ensureStateModel: function () {
+			var oComponent = this.getOwnerComponent && this.getOwnerComponent();
 
-			var c = "C";
+			if (oComponent && !oComponent.getModel("xrefState")) {
+				oComponent.setModel(new J({
+					xref2Status: "X"
+				}), "xrefState");
+			}
+		},
+
+		_getStateModel: function () {
+			var oComponent = this.getOwnerComponent && this.getOwnerComponent();
+			return oComponent ? oComponent.getModel("xrefState") : null;
+		},
+
+		_setXref2Status: function (sStatus) {
+			var oModel = this._getStateModel();
+
+			if (oModel) {
+				oModel.setProperty("/xref2Status", sStatus || "X");
+			}
+		},
+
+		_getInnerControl: function (oControl) {
+			if (!oControl) {
+				return null;
+			}
+
+			if (typeof oControl.getInnerControls === "function") {
+				var aInnerControls = oControl.getInnerControls();
+
+				if (aInnerControls && aInnerControls.length) {
+					return aInnerControls[0];
+				}
+			}
+
+			return oControl;
+		},
+
+		_getAssignmentReferenceInput: function () {
+			return this._getInnerControl(this.getView().byId("idS2P.MM.MSI.InputAssignmentReference"));
+		},
+
+		_getAccountingHeaderTextInput: function () {
+			return this._getInnerControl(this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText"));
+		},
+
+		_getGlobalControl: function (sId) {
+			return sap.ui.getCore().byId(this.getView()._sOwnerId + "---MMIV_HEADER_ID_S1--" + sId);
+		},
+
+		_getCompanyCodeValue: function () {
+			var oCompanyCode = this._getGlobalControl("idS2P.MM.MSI.CEInputCompanyCode");
+
+			return oCompanyCode ? oCompanyCode.getValue() : "";
+		},
+
+		_getPostingYear: function () {
+			var oPostingDate = this._getGlobalControl("idS2P.MM.MSI.CEDatePickerPostingDate");
+			var oDatePicker = oPostingDate && typeof oPostingDate.getContent === "function" ? oPostingDate.getContent()[0] : null;
+			var oDateValue = oDatePicker && typeof oDatePicker.getDateValue === "function" ? oDatePicker.getDateValue() : null;
+
+			return oDateValue ? oDateValue.getFullYear() : "";
+		},
+
+		_getGrossAmountValue: function () {
+			var oGrossAmount = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
+
+			return oGrossAmount ? oGrossAmount.getValue().split(".").join("") : "";
+		},
+
+		_getGrossAmountCurrency: function () {
+			var oGrossAmountCurrency = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount-sfEdit");
+
+			return oGrossAmountCurrency ? oGrossAmountCurrency.getValue() : "";
+		},
+
+		_getExchangeRateValue: function () {
+			var oExchangeRate = this._getGlobalControl("idS2P.MM.MSI.InputExchangeRate");
+
+			return oExchangeRate ? oExchangeRate.getValue() : "";
+		},
+
+		_getSupplierInvoice: function () {
+			var sSupplierInvoice = window.location.href.substr(window.location.href.search("SupplierInvoice=") + 16, 10);
+
+			return isNaN(sSupplierInvoice) ? "" : sSupplierInvoice;
+		},
+
+		_wireInputOnce: function (oInput, sKey, fnCallback) {
+			if (!oInput || oInput.data(sKey)) {
+				return;
+			}
+
+			fnCallback(oInput);
+			oInput.data(sKey, true, true);
+		},
+
+		_handleAmountChange: function () {
+			var oCompanyCode = this._getCompanyCodeValue();
+			var oXref2 = this._getAccountingHeaderTextInput();
+
+			if (oCompanyCode === "3000" && oXref2) {
+				oXref2.setValue("");
+				oXref2.data("dato", "", true);
+				oXref2.data("noError", "", true);
+				this._setXref2Status("");
+			}
+
+			this._syncHeaderFields();
+		},
+
+		_syncHeaderFields: function () {
+			var oXref1Input = this._getAssignmentReferenceInput();
+			var oXref2Input = this._getAccountingHeaderTextInput();
+			var oAssignmentLabel = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
+			var oHeaderTextLabel = this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
+			var sCompanyCode = this._getCompanyCodeValue();
+			var oGrossAmount = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
+			var bEditable = oGrossAmount ? oGrossAmount.getEditable() : true;
+
+			if (oAssignmentLabel) {
+				oAssignmentLabel.setText("XRef1");
+				oAssignmentLabel.setRequired(true);
+			}
+
+			if (oHeaderTextLabel) {
+				oHeaderTextLabel.setText("Clave referencia 2");
+				oHeaderTextLabel.setRequired(sCompanyCode === "3000");
+			}
+
+			if (oXref1Input) {
+				if (typeof oXref1Input.setShowValueHelp === "function") {
+					oXref1Input.setShowValueHelp(true);
+				}
+				if (typeof oXref1Input.setValueHelpOnly === "function") {
+					oXref1Input.setValueHelpOnly(true);
+				}
+				if (typeof oXref1Input.setEditable === "function") {
+					oXref1Input.setEditable(bEditable);
+				}
+				this._wireInputOnce(oXref1Input, "xref1ValueHelpAttached", function (oInput) {
+					if (typeof oInput.attachValueHelpRequest === "function") {
+						oInput.attachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
+					}
+				}.bind(this));
+			}
+
+			if (oXref2Input) {
+				if (typeof oXref2Input.setVisible === "function") {
+					oXref2Input.setVisible(true);
+				}
+				if (typeof oXref2Input.setShowValueHelp === "function") {
+					oXref2Input.setShowValueHelp(true);
+				}
+				if (typeof oXref2Input.setValueHelpOnly === "function") {
+					oXref2Input.setValueHelpOnly(true);
+				}
+				if (typeof oXref2Input.setEditable === "function") {
+					oXref2Input.setEditable(bEditable);
+				}
+				this._wireInputOnce(oXref2Input, "xref2ValueHelpAttached", function (oInput) {
+					if (typeof oInput.attachValueHelpRequest === "function") {
+						oInput.attachValueHelpRequest(this.onSearchXref2, this);
+					}
+				}.bind(this));
+			}
+
+			this._wireInputOnce(oGrossAmount, "xrefAmountChangeAttached", function (oInput) {
+				if (typeof oInput.attachChange === "function") {
+					oInput.attachChange(this._handleAmountChange, this);
+				}
+			}.bind(this));
 		},
 
 		onSearchXref2: function (oEvent) {
 
-			var CompanyCodeInput = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputCompanyCode");
-			if (CompanyCodeInput) {
-				var CompanyCode = CompanyCodeInput.getValue();
-			}
-			// var CompanyCode = window.location.href.substr(window.location.href.search("CompanyCode=") + 12,4);
-			var FiscalYear = sap.ui.getCore().byId("" + this.getView()._sOwnerId + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEDatePickerPostingDate")
-				.getContent().getDateValue().getFullYear();
-			 var SupplierInvoice = window.location.href.substr(window.location.href.search("SupplierInvoice=") + 16, 10);
-			 
-			 if (isNaN(SupplierInvoice)){
-			 	SupplierInvoice = "";
-			 }
+			var CompanyCode = this._getCompanyCodeValue();
+			var FiscalYear = this._getPostingYear();
+			var SupplierInvoice = this._getSupplierInvoice();
+			var SupplierInvoiceValue = this._getGrossAmountValue();
+			var SupplierInvoiceValueCurr = this._getGrossAmountCurrency();
+			var tasa = this._getExchangeRateValue();
 
-			var SupplierInvoiceValue = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputInvoiceGrossAmount").getValue().split(".").join("");
-
-			var SupplierInvoiceValueCurr = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputInvoiceGrossAmount-sfEdit").getValue();
-				
-			// var tasa = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-			// 	"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputExchangeRate").getValue().split("/").join("");
-			
-			var tasa = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--idS2P.MM.MSI.InputExchangeRate").getValue();
 
 			var servicio = "/sap/opu/odata/sap/ZMM_SUPPLIER_INVOICE_MANAGE_SRV";
 			var ozModel = new sap.ui.model.odata.ODataModel(servicio, true);
@@ -170,14 +304,8 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (C) {
 
 			var s = e.getParameter("selectedItem");
 			// var CompanyCode = jQuery.sap.getUriParameters().get("CompanyCode");
-			var CompanyCodeInput = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputCompanyCode");
-			if (CompanyCodeInput) {
-				var CompanyCode = CompanyCodeInput.getValue();
-			}
-			// var CompanyCode = window.location.href.substr(window.location.href.search("CompanyCode=") + 12,4);
-			var FiscalYear = sap.ui.getCore().byId("" + this.getView()._sOwnerId + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEDatePickerPostingDate")
-				.getContent().getDateValue().getFullYear();
+			var CompanyCode = this._getCompanyCodeValue();
+			var FiscalYear = this._getPostingYear();
 			// var SupplierInvoiceValue = window.location.href.substr(window.location.href.search("SupplierInvoiceValue=") + 16, 10);
 
 			// var SupplierInvoiceValue = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
@@ -187,30 +315,30 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (C) {
 			// 	"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputInvoiceGrossAmount-sfEdit").getValue();
 			if (s) {
 
-				if (this.byId(this.inputId)) {
-					var xref2 = this.byId(this.inputId);
-				} else {
-					xref2 = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z");
-				}
+				var xref2 = sap.ui.getCore().byId(this.inputId) || this._getAccountingHeaderTextInput();
 
 				if (CompanyCode && CompanyCode === "3000") {
 
 					if (s.getBindingContext().getObject().BuGroup != "A" && s.getBindingContext().getObject().BuGroup != "B") {
 						sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 						xref2.data("noError", "", true);
+						this._setXref2Status("");
 						xref2.setValue("");
 						xref2.data("dato", "", true);
 					} else if (s.getBindingContext().getObject().BuGroup == "B") {
 						sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 						xref2.data("noError", "B", true);
+						this._setXref2Status("B");
 						xref2.setValue("");
 						xref2.data("dato", "", true);
 					} else {
 						xref2.data("noError", "X", true);
+						this._setXref2Status("X");
 						xref2.setValue(s.getBindingContext().getObject().Partner);
 					}
 				} else {
 					xref2.data("noError", "X", true);
+					this._setXref2Status("X");
 					xref2.setValue(s.getBindingContext().getObject().Partner);
 				}
 				// this.oDialog.close();
@@ -227,121 +355,14 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (C) {
 
 		onAfterRendering: function (oEvent) {
 
-			var CompanyCodeInput = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputCompanyCode");
-			if (CompanyCodeInput) {
-				var urlCompanyCode = CompanyCodeInput.getValue();
-			}
-
-			// var urlCompanyCode = window.location.href.substr(window.location.href.search("CompanyCode") + 12, 4);
-
-			var XREF1Z = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ");
-			var XREF2Z = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z");
-
-			var XREF1 = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
-
-			var CompanyCode = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputCompanyCode");
-
-			var GrossAmount = sap.ui.getCore().byId("" + this.getView()._sOwnerId +
-				"---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputInvoiceGrossAmount");
-
-			if (XREF1 && XREF1Z && XREF2Z) {
-
-				XREF1.setVisible(false);
-				// XREF1.setValue(XREF1Z.getValue());
-				XREF1Z.setEditable(GrossAmount.getEditable());
-				XREF2Z.setEditable(GrossAmount.getEditable());
-
-				if (urlCompanyCode) {
-
-					if (XREF1Z.data("dato") != "" && XREF1Z.getValue() === "") {
-						XREF1Z.setValue(XREF1Z.data("dato"));
-					} else if ((XREF1Z.data("dato") === "" || !XREF1Z.data("dato")) && XREF1Z.getValue() != "") {
-						XREF1Z.data("dato", XREF1Z.getValue(), true);
-					}
-
-					if (XREF2Z.data("noError") === "" || !XREF2Z.data("noError")) {
-
-						if (XREF2Z.data("dato") != "" && XREF2Z.getValue() === "") {
-							XREF2Z.setValue(XREF2Z.data("dato"));
-						} else if ((XREF2Z.data("dato") === "" || !XREF2Z.data("dato")) && XREF2Z.getValue() != "") {
-							XREF2Z.data("dato", XREF2Z.getValue(), true);
-						}
-
-					}
-
-					// XREF2Z.setValue(this.getView().getBindingContext().getProperty("AccountingDocumentHeaderText"));
-				}
-
-				// if (XREF1.getEditable() === "false") {
-				// 	XREF1Z.setValue(XREF1.getValue());
-				// }
-
-			}
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-
-				var xref2 = this.getView().byId("label2");
-
-				if (xref2) {
-
-					xref2.setRequired(true);
-				}
-
-				var servicio = "/sap/opu/odata/sap/ZMM_POPUP_4170V2_SRV";
-				var ozModel = new sap.ui.model.odata.ODataModel(servicio, true);
-
-				var oBukrs = sap.ui.getCore().byId("" + XREF1Z._sOwnerId + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.CEInputCompanyCode").getValue();
-
-				var oProperty = {
-					Bukrs: oBukrs
-				};
-
-				// this._getDialogPopUpWorkflow().close();
-
-				ozModel.callFunction("/VH_XRef1", {
-					method: "POST",
-					urlParameters: oProperty,
-					success: function (oData, response) {
-
-						var XREF1Z = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ");
-
-						if (XREF1Z && XREF1Z.getValue === "") {
-							XREF1Z.setValue(oData.results[0].CountryOffice);
-						}
-
-						var XREF1 = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
-
-						if (XREF1 && XREF1Z) {
-
-							XREF1.setVisible(false);
-							// XREF1.setValue(XREF1Z.getValue());
-
-						}
-
-					}.bind(this), // callback function for success
-					error: function (oError) {
-						sap.m.MessageToast.show("Se produjo un error");
-						// this.setBusy(false);
-					}.bind(this)
-				});
-
-			} else {
-				xref2 = this.getView().byId("label2");
-
-				if (xref2) {
-
-					xref2.setRequired(false);
-				}
-			}
+			this._syncHeaderFields();
 
 		},
 
-		onValueHelpInputAssignmentReferenceZ: function (oEvent) {
+			onValueHelpInputAssignmentReferenceZ: function (oEvent) {
 			var that = this;
 
-			var XREF1Z = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ");
+			var XREF1Z = this._getAssignmentReferenceInput();
 
 			var oId = XREF1Z.getId();
 

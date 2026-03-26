@@ -4,14 +4,14 @@ const fs = require('fs');
 const path = require('path');
 const UglifyJS = require('uglify-js');
 
-const projectRoot = path.join(__dirname, '..');
-const sourceDir = projectRoot;
+const appRoot = path.join(__dirname, '..');
+const projectRoot = path.join(appRoot, '..');
+const sourceDir = appRoot;
 const distDir = path.join(projectRoot, 'dist');
 
-// Crear directorio dist
-if (!fs.existsSync(distDir)) {
-  fs.mkdirSync(distDir, { recursive: true });
-}
+// Limpiar dist para evitar arrastrar artefactos previos del builder UI5.
+fs.rmSync(distDir, { recursive: true, force: true });
+fs.mkdirSync(distDir, { recursive: true });
 
 // Crear subdirectorios necesarios
 const dirs = ['controller', 'view', 'view/blocks', 'view/blocks/S1', 'fragment', 'i18n', 'localService', 'resources'];
