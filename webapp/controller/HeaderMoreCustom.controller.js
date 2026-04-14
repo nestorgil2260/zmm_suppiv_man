@@ -158,11 +158,11 @@ sap.ui.define([
 		},
 
 		_getAssignmentReferenceInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
+			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
 		},
 
 		_getAccountingHeaderTextInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
+			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z") || this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
 		},
 
 		_getGlobalControl: function (sId) {
@@ -238,8 +238,8 @@ sap.ui.define([
 		_syncHeaderFields: function () {
 			var oXref1Input = this._getAssignmentReferenceInput();
 			var oXref2Input = this._getAccountingHeaderTextInput();
-			var oXref1Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ");
-			var oXref2Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z");
+			var oXref1Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
+			var oXref2Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
 			var oAssignmentLabel = this.getView().byId("label0") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ-label") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
 			var oHeaderTextLabel = this.getView().byId("label2") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z-label") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
 			var oFullScreenModel = this.getView().getModel("fullScreen");
@@ -286,16 +286,9 @@ sap.ui.define([
 				if (typeof oXref1Input.setEditable === "function") {
 					oXref1Input.setEditable(true);
 				}
-				if (typeof oXref1Input.detachValueHelpRequest === "function") {
-					oXref1Input.detachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
+				if (typeof oXref1Input.setShowValueHelp === "function") {
+					oXref1Input.setShowValueHelp(true);
 				}
-				if (typeof oXref1Input.attachValueHelpRequest === "function") {
-					oXref1Input.attachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
-				} else if (typeof oXref1Input.detachEvent === "function" && typeof oXref1Input.attachEvent === "function") {
-					oXref1Input.detachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
-					oXref1Input.attachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
-				}
-				this._attachValueHelpFallbackDelegate(oXref1Input, "xref1SapShowAttached", this.onValueHelpInputAssignmentReferenceZ);
 			}
 
 			if (oXref2Input) {
@@ -314,14 +307,8 @@ sap.ui.define([
 				if (typeof oXref2Input.setEditable === "function") {
 					oXref2Input.setEditable(true);
 				}
-				if (typeof oXref2Input.detachValueHelpRequest === "function") {
-					oXref2Input.detachValueHelpRequest(this.onSearchXref2, this);
-				}
-				if (typeof oXref2Input.attachValueHelpRequest === "function") {
-					oXref2Input.attachValueHelpRequest(this.onSearchXref2, this);
-				} else if (typeof oXref2Input.detachEvent === "function" && typeof oXref2Input.attachEvent === "function") {
-					oXref2Input.detachEvent("valueHelpRequest", this.onSearchXref2, this);
-					oXref2Input.attachEvent("valueHelpRequest", this.onSearchXref2, this);
+				if (typeof oXref2Input.setShowValueHelp === "function") {
+					oXref2Input.setShowValueHelp(true);
 				}
 				this._attachValueHelpFallbackDelegate(oXref2Input, "xref2SapShowAttached", this.onSearchXref2);
 			}
@@ -382,7 +369,6 @@ sap.ui.define([
 				console.log("HeaderMoreCustom: creating oDialog fragment popUpXref2VH");
 				if (sap.ui.core.Fragment && typeof sap.ui.core.Fragment.load === "function") {
 					sap.ui.core.Fragment.load({
-						id: this.getView().getId(),
 						name: "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH",
 						controller: this
 					}).then(function(oDialog){

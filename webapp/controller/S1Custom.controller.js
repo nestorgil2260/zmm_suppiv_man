@@ -136,17 +136,19 @@ sap.ui.define([
 
 		_validateHeaderReferences: function () {
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReferenceZ", "AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference2Z",
-				"AccountingDocumentHeaderText");
+			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReferenceZ", "AssignmentReference") || this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference", "AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference2Z", "AccountingDocumentHeaderText") || this._getHeaderFieldValue("idS2P.MM.MSI.InputAccountingDocumentHeaderText", "AccountingDocumentHeaderText");
 			var sXref2Status = this._getXref2Status();
 			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
 
 			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
+			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
 
 			if (bRequiresXref2) {
 				if (!sAccountingDocumentHeaderText) {
 					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
+						"El campo Clv.Ref.2 es obligatorio");
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
 						"El campo Clv.Ref.2 es obligatorio");
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return false;
@@ -167,10 +169,14 @@ sap.ui.define([
 				}
 
 				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+			} else {
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+			}
 
 			if (!sAssignmentReference) {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.Error,
-					"El campo Clv.Ref.1 es obligatorio");
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.Error, "El campo Clv.Ref.1 es obligatorio");
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "El campo Clv.Ref.1 es obligatorio");
+				this._setHeaderFieldValueState("label0", sap.ui.core.ValueState.Error, "");
 				// Add message to MessageManager so it appears in the standard message popover
 				try {
 					var oContext = this.getView().getBindingContext && this.getView().getBindingContext();

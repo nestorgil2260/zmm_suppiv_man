@@ -167,6 +167,9 @@ sap.ui.define([
 				}
 
 				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+			} else {
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+			}
 
 			if (!sAssignmentReference) {
 				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.Error,
