@@ -246,10 +246,9 @@ sap.ui.define([
 				return false;
 			}
 
-			}
-
 			return true;
 		},
+
 		// setJournalEntriesButtonEnabled: function () {
 		// 	if (!this.oCrossAppNavigator) {
 		// 		this.oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
