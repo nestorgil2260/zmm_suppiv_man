@@ -144,18 +144,16 @@ sap.ui.define([
 				$elements.each(function() {
 					var sFullId = this.id;
 					var oCtrl = sap.ui.getCore().byId(sFullId);
-					if (!oCtrl) {
-						// Try stripping suffixes like -inner
-						oCtrl = sap.ui.getCore().byId(sFullId.split("-")[0]);
-					}
+					if (!oCtrl) { oCtrl = sap.ui.getCore().byId(sFullId.split("-")[0]); }
 					if (oCtrl && aAllControls.indexOf(oCtrl) === -1) {
 						aAllControls.push(oCtrl);
 					}
 				});
 
-				// Prioritize the one that is actually visible and has a DOM reference
+				// Prioritize the one that is actually visible
 				var oVisible = aAllControls.find(function(oCtrl) {
-					return typeof oCtrl.getVisible === "function" && oCtrl.getVisible() !== false && !!oCtrl.getDomRef();
+					var bVis = typeof oCtrl.getVisible === "function" ? oCtrl.getVisible() !== false : true;
+					return bVis && !!oCtrl.getDomRef();
 				});
 
 				return oVisible || aAllControls[0] || null;
@@ -190,14 +188,18 @@ sap.ui.define([
 		_getAssignmentReferenceInput: function () {
 			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
 			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
-			console.log("Discovery: AssignmentReference Input found:", oInput ? oInput.getId() : "NOT FOUND");
+			if (oInput) {
+				console.log("Discovery: AssignmentReference found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
+			}
 			return oInput;
 		},
 
 		_getAccountingHeaderTextInput: function () {
 			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
 			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
-			console.log("Discovery: AccountingDocumentHeader Input found:", oInput ? oInput.getId() : "NOT FOUND");
+			if (oInput) {
+				console.log("Discovery: AccountingDocumentHeader found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
+			}
 			return oInput;
 		},
 
@@ -316,7 +318,15 @@ sap.ui.define([
 			var bEditable = typeof vEditMode === "boolean" ? vEditMode :
 				(vEditMode === "Editable" || vEditMode === "Edit" || (oGrossAmount ? oGrossAmount.getEditable() : true));
 
-			// Visibility handled by standard layout or XML
+			// Debug: Log all view controls
+			try {
+				console.log("--- VIEW CONTROLS SCAN ---");
+				this.getView().findAggregatedObjects(true).forEach(function(o) {
+					if (o.getId().indexOf("InputAssignment") !== -1 || o.getId().indexOf("InputAccounting") !== -1) {
+						console.log("Found relevant control:", o.getId(), "Visible:", o.getVisible());
+					}
+				});
+			} catch(e) {}
 
 
 			if (oAssignmentLabel) {
