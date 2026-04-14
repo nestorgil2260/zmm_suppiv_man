@@ -184,20 +184,20 @@ sap.ui.define([
 
 		_getGrossAmountValue: function () {
 			var oGrossAmount = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
-
-			return oGrossAmount ? oGrossAmount.getValue().split(".").join("") : "";
+			var sVal = oGrossAmount ? oGrossAmount.getValue() : "";
+			return sVal ? String(sVal).split(".").join("") : "";
 		},
 
 		_getGrossAmountCurrency: function () {
 			var oGrossAmountCurrency = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount-sfEdit");
-
-			return oGrossAmountCurrency ? oGrossAmountCurrency.getValue() : "";
+			var sVal = oGrossAmountCurrency ? oGrossAmountCurrency.getValue() : "";
+			return sVal ? String(sVal) : "";
 		},
 
 		_getExchangeRateValue: function () {
 			var oExchangeRate = this._getGlobalControl("idS2P.MM.MSI.InputExchangeRate");
-
-			return oExchangeRate ? oExchangeRate.getValue() : "";
+			var sVal = oExchangeRate ? oExchangeRate.getValue() : "";
+			return sVal ? String(sVal) : "";
 		},
 
 		_getSupplierInvoice: function () {
@@ -272,6 +272,9 @@ sap.ui.define([
 				}
 				if (typeof oXref1Input.setEnabled === "function") {
 					oXref1Input.setEnabled(true);
+				}
+				if (typeof oXref1Input.setRequired === "function") {
+					oXref1Input.setRequired(true);
 				}
 				if (typeof oXref1Input.setShowValueHelp === "function") {
 					oXref1Input.setShowValueHelp(true);
@@ -350,37 +353,52 @@ sap.ui.define([
 			var path;
 			var oTableStdListTemplate;
 			var oFilterTableNo;
+			var fnOpenDialog = function() {
+				var path = "/empleadoVHSet";
+				var oTableStdListTemplate = new sap.m.StandardListItem({
+					title: "{Partner}",
+					description: "{Name1Text}"
+				}); // //create a filter for the binding
+				var oFilterTableNo = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, sInputValue);
+				var oFilterCompanyCode = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(CompanyCode || ""));
+				var oFilterFiscalYear = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(FiscalYear || ""));
+				var oFilterSupplierInvoiceValue = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoiceValue || ""));
+				var oFilterSupplierInvoiceValueCurr = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoiceValueCurr || ""));
+				var oFilterSupplierInvoice = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoice || ""));
+				var oFilterTasa = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(tasa || ""));	
+
+				this.oDialog.unbindAggregation("items");
+				this.oDialog.bindAggregation("items", {
+					path: path,
+					template: oTableStdListTemplate,
+					filters: [oFilterTableNo, oFilterCompanyCode, oFilterFiscalYear, oFilterSupplierInvoiceValue, oFilterSupplierInvoiceValueCurr, oFilterSupplierInvoice, oFilterTasa ]
+				}); // }// open value help dialog filtered by the input value
+				console.log("HeaderMoreCustom: opening oDialog with filter value", sInputValue);
+				this.oDialog.open(sInputValue);
+			}.bind(this);
+
 			if (!this.oDialog) {
 				console.log("HeaderMoreCustom: creating oDialog fragment popUpXref2VH");
-				this.oDialog = sap.ui.xmlfragment("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
-				this.oDialog.setModel(ozModel);
+				if (sap.ui.core.Fragment && typeof sap.ui.core.Fragment.load === "function") {
+					sap.ui.core.Fragment.load({
+						name: "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH",
+						controller: this
+					}).then(function(oDialog){
+						this.oDialog = oDialog;
+						this.getView().addDependent(this.oDialog);
+						this.oDialog.setModel(ozModel);
+						fnOpenDialog();
+					}.bind(this));
+				} else {
+					this.oDialog = sap.ui.xmlfragment("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
+					this.getView().addDependent(this.oDialog);
+					this.oDialog.setModel(ozModel);
+					fnOpenDialog();
+				}
 			} else {
 				console.log("HeaderMoreCustom: reusing existing oDialog");
+				fnOpenDialog();
 			}
-			path = "/empleadoVHSet";
-			oTableStdListTemplate = new sap.m.StandardListItem({
-				title: "{Partner}",
-				description: "{Name1Text}"
-			}); // //create a filter for the binding
-			oFilterTableNo = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, sInputValue);
-			var oFilterCompanyCode = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, CompanyCode);
-			var oFilterFiscalYear = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, FiscalYear);
-			var oFilterSupplierInvoiceValue = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, SupplierInvoiceValue);
-			var oFilterSupplierInvoiceValueCurr = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				SupplierInvoiceValueCurr);
-			var oFilterSupplierInvoice = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				SupplierInvoice);
-			var oFilterTasa = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				tasa);	
-
-			this.oDialog.unbindAggregation("items");
-			this.oDialog.bindAggregation("items", {
-				path: path,
-				template: oTableStdListTemplate,
-				filters: [oFilterTableNo, oFilterCompanyCode, oFilterFiscalYear, oFilterSupplierInvoiceValue, oFilterSupplierInvoiceValueCurr, oFilterSupplierInvoice, oFilterTasa ]
-			}); // }// open value help dialog filtered by the input value
-			console.log("HeaderMoreCustom: opening oDialog with filter value", sInputValue);
-			this.oDialog.open(sInputValue);
 		},
 
 		onSearchXref2LiveChange: function (oEvent) {
@@ -421,8 +439,8 @@ sap.ui.define([
 			var oTableStdListTemplate;
 			var oFilterTableNo;
 			if (!this.oDialog) {
-				this.oDialog = sap.ui.xmlfragment("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
-				this.oDialog.setModel(ozModel);
+				// Prevent error if dialog was removed
+				return;
 			}
 			path = "/empleadoVHSet";
 			oTableStdListTemplate = new sap.m.StandardListItem({
@@ -430,16 +448,12 @@ sap.ui.define([
 				description: "{Name1Text}"
 			}); // //create a filter for the binding
 			oFilterTableNo = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, sInputValue);
-			var oFilterCompanyCode = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, CompanyCode);
-			var oFilterFiscalYear = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, FiscalYear);
-			var oFilterSupplierInvoiceValue = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, SupplierInvoiceValue);
-			var oFilterSupplierInvoiceValueCurr = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				SupplierInvoiceValueCurr);
-			var oFilterSupplierInvoice = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				SupplierInvoice);
-				
-			var oFilterTasa = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains,
-				tasa);	
+			var oFilterCompanyCode = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(CompanyCode || ""));
+			var oFilterFiscalYear = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(FiscalYear || ""));
+			var oFilterSupplierInvoiceValue = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoiceValue || ""));
+			var oFilterSupplierInvoiceValueCurr = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoiceValueCurr || ""));
+			var oFilterSupplierInvoice = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoice || ""));
+			var oFilterTasa = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(tasa || ""));	
 
 			this.oDialog.unbindAggregation("items");
 			this.oDialog.bindAggregation("items", {
@@ -448,7 +462,6 @@ sap.ui.define([
 				filters: [oFilterTableNo, oFilterCompanyCode, oFilterFiscalYear, oFilterSupplierInvoiceValue, oFilterSupplierInvoiceValueCurr, oFilterSupplierInvoice, oFilterTasa]
 			}); // }// open value help dialog filtered by the input value
 			console.log("HeaderMoreCustom: opening oDialog (live change) with value", sInputValue);
-			this.oDialog.open(sInputValue);
 		},
 		handleTableValueHelpConfirm: function (e) {
 
