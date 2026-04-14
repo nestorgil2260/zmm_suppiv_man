@@ -1,7 +1,8 @@
 sap.ui.define([
 	"sap/ui/core/mvc/Controller",
-	"sap/ui/model/json/JSONModel"
-], function (C, J) {
+	"sap/ui/model/json/JSONModel",
+	"sap/ui/core/Fragment"
+], function (C, J, Fragment) {
 	"use strict";
 	var H = sap.ui.controller("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.HeaderMoreCustom", {
 		//    onControlChanged: function (e) {
@@ -359,7 +360,7 @@ sap.ui.define([
 					title: "{Partner}",
 					description: "{Name1Text}"
 				}); // //create a filter for the binding
-				var oFilterTableNo = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, sInputValue);
+				var oFilterTableNo = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(sInputValue || ""));
 				var oFilterCompanyCode = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(CompanyCode || ""));
 				var oFilterFiscalYear = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(FiscalYear || ""));
 				var oFilterSupplierInvoiceValue = new sap.ui.model.Filter("Name1Text", sap.ui.model.FilterOperator.Contains, String(SupplierInvoiceValue || ""));
@@ -381,16 +382,20 @@ sap.ui.define([
 				console.log("HeaderMoreCustom: creating oDialog fragment popUpXref2VH");
 				if (sap.ui.core.Fragment && typeof sap.ui.core.Fragment.load === "function") {
 					sap.ui.core.Fragment.load({
+						id: this.getView().getId(),
 						name: "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH",
 						controller: this
 					}).then(function(oDialog){
+						console.log("HeaderMoreCustom: oDialog loaded successfully");
 						this.oDialog = oDialog;
 						this.getView().addDependent(this.oDialog);
 						this.oDialog.setModel(ozModel);
 						fnOpenDialog();
-					}.bind(this));
+					}.bind(this)).catch(function(oError){
+						console.error("HeaderMoreCustom: Error loading fragment popUpXref2VH", oError);
+					});
 				} else {
-					this.oDialog = sap.ui.xmlfragment("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
+					this.oDialog = sap.ui.xmlfragment(this.getView().getId(), "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
 					this.getView().addDependent(this.oDialog);
 					this.oDialog.setModel(ozModel);
 					fnOpenDialog();
@@ -439,7 +444,8 @@ sap.ui.define([
 			var oTableStdListTemplate;
 			var oFilterTableNo;
 			if (!this.oDialog) {
-				// Prevent error if dialog was removed
+				// We need to wait for the dialog to be loaded by onSearchXref2 if it doesn't exist yet
+				this.onSearchXref2(oEvent);
 				return;
 			}
 			path = "/empleadoVHSet";

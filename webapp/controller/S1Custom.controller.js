@@ -102,7 +102,7 @@ sap.ui.define([
 
 			if (!oControl) {
 				// Try finding the control in the embedded HeaderMore view or globally
-				var sOwnerId = (oView.getController && oView.getController().getOwnerComponent && oView.getController().getOwnerComponent().getId()) || oView._sOwnerId;
+				var sOwnerId = (this.getOwnerComponent && this.getOwnerComponent()) ? this.getOwnerComponent().getId() : (oView._sOwnerId || "");
 				oControl = sap.ui.getCore().byId(sOwnerId + "---MMIV_HEADER_ID_S1--" + sFieldId);
 			}
 
