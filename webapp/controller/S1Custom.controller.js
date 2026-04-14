@@ -164,21 +164,30 @@ sap.ui.define([
 
 		_validateHeaderReferences: function () {
 			console.log("S1Custom._validateHeaderReferences - START");
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var oView = this.getView();
+			var CompanyCode = oView.byId("idS2P.MM.MSI.CEInputCompanyCode");
+
+			// Discover input controls
 			var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
 			var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
+			console.log("Validation: Xref1 found:", oXref1 ? oXref1.getId() : "NOT FOUND");
+			console.log("Validation: Xref2 found:", oXref2 ? oXref2.getId() : "NOT FOUND");
 
-			console.log("Validation: Xref1 Input found:", oXref1 ? oXref1.getId() : "NOT FOUND");
-			console.log("Validation: Xref2 Input found:", oXref2 ? oXref2.getId() : "NOT FOUND");
+			// Read values: prefer from OData binding context (most reliable in Fiori) with input fallback
+			var oContext = oView.getBindingContext && oView.getBindingContext();
+			var sAssignmentReference = (oContext ? oContext.getProperty("AssignmentReference") : null)
+				|| (oXref1 && typeof oXref1.getValue === "function" ? oXref1.getValue() : "");
+			var sAccountingDocumentHeaderText = (oContext ? oContext.getProperty("AccountingDocumentHeaderText") : null)
+				|| (oXref2 && typeof oXref2.getValue === "function" ? oXref2.getValue() : "");
+			sAssignmentReference = (sAssignmentReference || "").trim();
+			sAccountingDocumentHeaderText = (sAccountingDocumentHeaderText || "").trim();
 
-			var sAssignmentReference = oXref1 && typeof oXref1.getValue === "function" ? oXref1.getValue() : this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = oXref2 && typeof oXref2.getValue === "function" ? oXref2.getValue() : this._getHeaderContextValue("AccountingDocumentHeaderText");
 			var sXref2Status = this._getXref2Status();
 			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
 
+			// Clear error states
 			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
 			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
-
 
 			if (bRequiresXref2) {
 				if (!sAccountingDocumentHeaderText) {
@@ -210,24 +219,33 @@ sap.ui.define([
 			}
 
 			if (!sAssignmentReference) {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "XRef1 es obligatorio");
-				sap.m.MessageToast.show("XRef1 es obligatorio");
-				
-				// Add message to MessageManager so it appears in the standard message popover
+				// Apply visual error state directly to the found control
+				if (oXref1 && typeof oXref1.setValueState === "function") {
+					oXref1.setValueState(sap.ui.core.ValueState.Error);
+					oXref1.setValueStateText("El campo Clv. Ref. 1 es obligatorio");
+				}
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "El campo Clv. Ref. 1 es obligatorio");
+
+				// Add to standard MessageManager so it appears in the Fiori messages popover
 				try {
-					var oContext = this.getView().getBindingContext && this.getView().getBindingContext();
-					var sTarget = oContext ? oContext.getPath() + "/AssignmentReference" : "";
-					var oMessage = new sap.ui.core.message.Message({
-						message: "El campo Clv.Ref.1 es obligatorio",
-						type: sap.ui.core.MessageType.Error,
-						target: sTarget
-					});
-					sap.ui.getCore().getMessageManager().addMessages(oMessage);
-				} catch (e) {
-					// fallback to toast if MessageManager not available
-					sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
+					var oMsgManager = sap.ui.getCore().getMessageManager();
+					var sXref1Target = oXref1 ? oXref1.getId() + "/value" : "";
+					// Remove duplicate messages
+					oMsgManager.removeMessages(oMsgManager.getMessageModel().getData().filter(function(m) {
+						return m.message === "El campo Clv. Ref. 1 es obligatorio";
+					}));
+					oMsgManager.addMessages(new sap.ui.core.message.Message({
+						message: "El campo Clv. Ref. 1 es obligatorio",
+						type: sap.ui.core.message.MessageType.Error,
+						target: sXref1Target,
+						processor: oView.getModel()
+					}));
+				} catch (eMsg) {
+					console.error("MessageManager error:", eMsg);
 				}
 				return false;
+			}
+
 			}
 
 			return true;

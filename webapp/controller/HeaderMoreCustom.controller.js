@@ -391,16 +391,18 @@ sap.ui.define([
 			}
 
 			if (oXref2Input) {
-				// Visibility handled by XML
-
 				if (typeof oXref2Input.setEnabled === "function") {
 					oXref2Input.setEnabled(true);
 				}
-				if (typeof oXref2Input.setValueHelpOnly === "function") {
-					oXref2Input.setValueHelpOnly(true);
-				}
 				if (typeof oXref2Input.setEditable === "function") {
 					oXref2Input.setEditable(true);
+				}
+				// CRITICAL: must set showValueHelp on inner input, not the SmartField
+				if (typeof oXref2Input.setShowValueHelp === "function") {
+					oXref2Input.setShowValueHelp(true);
+				}
+				if (typeof oXref2Input.setValueHelpOnly === "function") {
+					oXref2Input.setValueHelpOnly(true);
 				}
 				this._wireValueHelpButton(oXref2Input, this.onSearchXref2);
 			}
