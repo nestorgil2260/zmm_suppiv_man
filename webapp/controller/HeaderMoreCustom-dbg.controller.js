@@ -170,34 +170,33 @@ sap.ui.define([
 			var oControl = sap.ui.getCore().byId(sId);
 			if (oControl) return oControl;
 
-			var sViewId = this.getView().getId();
-			oControl = sap.ui.getCore().byId(sViewId + "--" + sId);
-			if (oControl) return oControl;
-
-			var sPrefix = (this.getView()._sOwnerId || "");
-			var aPrefixes = [
-				sPrefix + "---MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-				sPrefix + "---MMIV_HEADER_ID_S1--",
-				sPrefix + "---",
-				"MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-				"MMIV_HEADER_ID_S1--"
-			];
-
-			for (var i = 0; i < aPrefixes.length; i++) {
-				oControl = sap.ui.getCore().byId(aPrefixes[i] + sId);
-				if (oControl) return oControl;
-			}
-
 			// Extreme fallback: Search by ID suffix in DOM
 			var $el = jQuery("[id$='" + sId + "']").first();
+			if ($el.length === 0) {
+				$el = jQuery("[id$='" + sId + "-input']").first();
+			}
+			if ($el.length === 0) {
+				$el = jQuery("[id$='" + sId + "-inner']").first();
+			}
+
 			if ($el.length > 0) {
 				var sFullId = $el.attr("id");
-				// Many controls have suffixes like -inner. Try to find the control ID.
+				console.log("Discovery: DOM found ID", sFullId, "for", sId);
 				oControl = sap.ui.getCore().byId(sFullId);
 				if (!oControl) {
-					var sBaseId = sFullId.split("-")[0];
-					oControl = sap.ui.getCore().byId(sBaseId);
+					// Try to strip suffixes to find the control ID
+					var aParts = sFullId.split("-");
+					while (aParts.length > 0 && !oControl) {
+						oControl = sap.ui.getCore().byId(aParts.join("-"));
+						aParts.pop();
+					}
 				}
+			}
+
+			if (!oControl) {
+				// Try with the specific prefix seen in the user's inspector
+				var sS4Prefix = (this.getView()._sOwnerId || "") + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--";
+				oControl = sap.ui.getCore().byId(sS4Prefix + sId);
 			}
 
 			return oControl;
@@ -205,8 +204,13 @@ sap.ui.define([
 
 		_getCompanyCodeValue: function () {
 			var oCompanyCode = this._getGlobalControl("idS2P.MM.MSI.CEInputCompanyCode");
-
-			return oCompanyCode ? oCompanyCode.getValue() : "";
+			if (oCompanyCode && typeof oCompanyCode.getValue !== "function" && typeof oCompanyCode.getInnerControls === "function") {
+				// If we found a wrapper/Grid, try to find the actual input inside
+				oCompanyCode = this._findBestMatchingControl(oCompanyCode, function(oCandidate) {
+					return !!oCandidate && typeof oCandidate.getValue === "function";
+				});
+			}
+			return (oCompanyCode && typeof oCompanyCode.getValue === "function") ? oCompanyCode.getValue() : "";
 		},
 
 		_getPostingYear: function () {
@@ -283,13 +287,8 @@ sap.ui.define([
 			var bEditable = typeof vEditMode === "boolean" ? vEditMode :
 				(vEditMode === "Editable" || vEditMode === "Edit" || (oGrossAmount ? oGrossAmount.getEditable() : true));
 
-			if (oXref1Field && typeof oXref1Field.setVisible === "function") {
-				oXref1Field.setVisible(true);
-			}
+			// Visibility handled by standard layout or XML
 
-			if (oXref2Field && typeof oXref2Field.setVisible === "function") {
-				oXref2Field.setVisible(true);
-			}
 
 			if (oAssignmentLabel) {
 				oAssignmentLabel.setText("XRef1");

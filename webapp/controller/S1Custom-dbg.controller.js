@@ -101,26 +101,21 @@ sap.ui.define([
 			var oControl = oView.byId(sFieldId);
 
 			if (!oControl) {
-				var sPrefix = (this.getOwnerComponent && this.getOwnerComponent()) ? this.getOwnerComponent().getId() : (oView._sOwnerId || "");
-				var aPrefixes = [
-					sPrefix + "---MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-					sPrefix + "---MMIV_HEADER_ID_S1--",
-					sPrefix + "---",
-					"MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-					"MMIV_HEADER_ID_S1--"
-				];
-
-				for (var i = 0; i < aPrefixes.length; i++) {
-					oControl = sap.ui.getCore().byId(aPrefixes[i] + sFieldId);
-					if (oControl) break;
-				}
-			}
-
-			if (!oControl) {
+				// Search by ID suffix in DOM (most reliable in S4 2025 extensions)
 				var $el = jQuery("[id$='" + sFieldId + "']").first();
+				if ($el.length === 0) { $el = jQuery("[id$='" + sFieldId + "-input']").first(); }
+				if ($el.length === 0) { $el = jQuery("[id$='" + sFieldId + "-inner']").first(); }
+				
 				if ($el.length > 0) {
 					var sFullId = $el.attr("id");
-					oControl = sap.ui.getCore().byId(sFullId) || sap.ui.getCore().byId(sFullId.split("-")[0]);
+					oControl = sap.ui.getCore().byId(sFullId);
+					if (!oControl) {
+						var aParts = sFullId.split("-");
+						while (aParts.length > 0 && !oControl) {
+							oControl = sap.ui.getCore().byId(aParts.join("-"));
+							aParts.pop();
+						}
+					}
 				}
 			}
 

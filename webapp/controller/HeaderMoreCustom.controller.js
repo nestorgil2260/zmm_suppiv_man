@@ -136,8 +136,37 @@ sap.ui.define([
 			}) || oControl || null;
 		},
 
+		_getVisibleControl: function (sId) {
+			try {
+				var aAllControls = [];
+				var $elements = jQuery("[id$='" + sId + "']");
+				
+				$elements.each(function() {
+					var sFullId = this.id;
+					var oCtrl = sap.ui.getCore().byId(sFullId);
+					if (!oCtrl) {
+						// Try stripping suffixes like -inner
+						oCtrl = sap.ui.getCore().byId(sFullId.split("-")[0]);
+					}
+					if (oCtrl && aAllControls.indexOf(oCtrl) === -1) {
+						aAllControls.push(oCtrl);
+					}
+				});
+
+				// Prioritize the one that is actually visible and has a DOM reference
+				var oVisible = aAllControls.find(function(oCtrl) {
+					return typeof oCtrl.getVisible === "function" && oCtrl.getVisible() !== false && !!oCtrl.getDomRef();
+				});
+
+				return oVisible || aAllControls[0] || null;
+			} catch (e) {
+				return null;
+			}
+		},
+
 		_getFieldInput: function (sFieldId) {
-			var oField = this.getView().byId(sFieldId) || this._getGlobalControl(sFieldId);
+			var oView = this.getView();
+			var oField = oView.byId(sFieldId) || this._getVisibleControl(sFieldId) || this._getGlobalControl(sFieldId);
 			var aCandidates = this._collectControlCandidates(oField, []);
 			var aInputCandidates = aCandidates.filter(function (oCandidate) {
 				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
@@ -173,46 +202,38 @@ sap.ui.define([
 		},
 
 		_getGlobalControl: function (sId) {
-			var oControl = sap.ui.getCore().byId(sId);
-			if (oControl) return oControl;
-
-			var sViewId = this.getView().getId();
-			oControl = sap.ui.getCore().byId(sViewId + "--" + sId);
-			if (oControl) return oControl;
-
-			var sPrefix = (this.getView()._sOwnerId || "");
-			var aPrefixes = [
-				sPrefix + "---MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-				sPrefix + "---MMIV_HEADER_ID_S1--",
-				sPrefix + "---",
-				"MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
-				"MMIV_HEADER_ID_S1--"
-			];
-
-			for (var i = 0; i < aPrefixes.length; i++) {
-				oControl = sap.ui.getCore().byId(aPrefixes[i] + sId);
+			try {
+				var oControl = sap.ui.getCore().byId(sId);
 				if (oControl) return oControl;
-			}
 
-			// Extreme fallback: Search by ID suffix in DOM
-			var $el = jQuery("[id$='" + sId + "']").first();
-			if ($el.length > 0) {
-				var sFullId = $el.attr("id");
-				// Many controls have suffixes like -inner. Try to find the control ID.
-				oControl = sap.ui.getCore().byId(sFullId);
-				if (!oControl) {
-					var sBaseId = sFullId.split("-")[0];
-					oControl = sap.ui.getCore().byId(sBaseId);
+				var sPrefix = (this.getView()._sOwnerId || "");
+				var aPrefixes = [
+					sPrefix + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
+					sPrefix + "---MMIV_HEADER_ID_S1--",
+					"MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
+					"MMIV_HEADER_ID_S1--"
+				];
+
+				for (var i = 0; i < aPrefixes.length; i++) {
+					oControl = sap.ui.getCore().byId(aPrefixes[i] + sId);
+					if (oControl) return oControl;
 				}
+				return null;
+			} catch (e) {
+				console.error("Error in _getGlobalControl", e);
+				return null;
 			}
-
-			return oControl;
 		},
 
 		_getCompanyCodeValue: function () {
 			var oCompanyCode = this._getGlobalControl("idS2P.MM.MSI.CEInputCompanyCode");
-
-			return oCompanyCode ? oCompanyCode.getValue() : "";
+			if (oCompanyCode && typeof oCompanyCode.getValue !== "function" && typeof oCompanyCode.getInnerControls === "function") {
+				// If we found a wrapper/Grid, try to find the actual input inside
+				oCompanyCode = this._findBestMatchingControl(oCompanyCode, function(oCandidate) {
+					return !!oCandidate && typeof oCandidate.getValue === "function";
+				});
+			}
+			return (oCompanyCode && typeof oCompanyCode.getValue === "function") ? oCompanyCode.getValue() : "";
 		},
 
 		_getPostingYear: function () {
@@ -237,7 +258,12 @@ sap.ui.define([
 
 		_getExchangeRateValue: function () {
 			var oExchangeRate = this._getGlobalControl("idS2P.MM.MSI.InputExchangeRate");
-			var sVal = oExchangeRate ? oExchangeRate.getValue() : "";
+			if (oExchangeRate && typeof oExchangeRate.getValue !== "function") {
+				oExchangeRate = this._findBestMatchingControl(oExchangeRate, function(oCandidate) {
+					return !!oCandidate && typeof oCandidate.getValue === "function";
+				});
+			}
+			var sVal = (oExchangeRate && typeof oExchangeRate.getValue === "function") ? oExchangeRate.getValue() : "";
 			return sVal ? String(sVal) : "";
 		},
 
@@ -276,8 +302,9 @@ sap.ui.define([
 		},
 
 		_syncHeaderFields: function () {
-			var oXref1Input = this._getAssignmentReferenceInput();
-			var oXref2Input = this._getAccountingHeaderTextInput();
+			try {
+				var oXref1Input = this._getAssignmentReferenceInput();
+				var oXref2Input = this._getAccountingHeaderTextInput();
 			var oXref1Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
 			var oXref2Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
 			var oAssignmentLabel = this.getView().byId("label0") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ-label") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
@@ -289,28 +316,26 @@ sap.ui.define([
 			var bEditable = typeof vEditMode === "boolean" ? vEditMode :
 				(vEditMode === "Editable" || vEditMode === "Edit" || (oGrossAmount ? oGrossAmount.getEditable() : true));
 
-			if (oXref1Field && typeof oXref1Field.setVisible === "function") {
-				oXref1Field.setVisible(true);
-			}
+			// Visibility handled by standard layout or XML
 
-			if (oXref2Field && typeof oXref2Field.setVisible === "function") {
-				oXref2Field.setVisible(true);
-			}
 
 			if (oAssignmentLabel) {
 				oAssignmentLabel.setText("XRef1");
-				oAssignmentLabel.setRequired(true);
+				if (typeof oAssignmentLabel.setRequired === "function") {
+					oAssignmentLabel.setRequired(true);
+				}
 			}
 
 			if (oHeaderTextLabel) {
 				oHeaderTextLabel.setText("Clave referencia 2");
-				oHeaderTextLabel.setRequired(sCompanyCode === "3000");
+				if (typeof oHeaderTextLabel.setRequired === "function") {
+					oHeaderTextLabel.setRequired(sCompanyCode === "3000");
+				}
 			}
 
 			if (oXref1Input) {
-				if (typeof oXref1Input.setVisible === "function") {
-					oXref1Input.setVisible(true);
-				}
+				// Visibility handled by XML
+
 				if (typeof oXref1Input.setEnabled === "function") {
 					oXref1Input.setEnabled(true);
 				}
@@ -319,6 +344,15 @@ sap.ui.define([
 				}
 				if (typeof oXref1Input.setShowValueHelp === "function") {
 					oXref1Input.setShowValueHelp(true);
+				}
+				// Force event attachment as backup
+				if (typeof oXref1Input.attachValueHelpRequest === "function") {
+					oXref1Input.detachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
+					oXref1Input.attachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
+				}
+				if (typeof oXref1Input.detachEvent === "function" && typeof oXref1Input.attachEvent === "function") {
+					oXref1Input.detachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
+					oXref1Input.attachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
 				}
 				if (typeof oXref1Input.setValueHelpOnly === "function") {
 					oXref1Input.setValueHelpOnly(false);
@@ -332,14 +366,22 @@ sap.ui.define([
 			}
 
 			if (oXref2Input) {
-				if (typeof oXref2Input.setVisible === "function") {
-					oXref2Input.setVisible(true);
-				}
+				// Visibility handled by XML
+
 				if (typeof oXref2Input.setEnabled === "function") {
 					oXref2Input.setEnabled(true);
 				}
 				if (typeof oXref2Input.setShowValueHelp === "function") {
 					oXref2Input.setShowValueHelp(true);
+				}
+				// Force event attachment as backup
+				if (typeof oXref2Input.attachValueHelpRequest === "function") {
+					oXref2Input.detachValueHelpRequest(this.onSearchXref2, this);
+					oXref2Input.attachValueHelpRequest(this.onSearchXref2, this);
+				}
+				if (typeof oXref2Input.detachEvent === "function" && typeof oXref2Input.attachEvent === "function") {
+					oXref2Input.detachEvent("valueHelpRequest", this.onSearchXref2, this);
+					oXref2Input.attachEvent("valueHelpRequest", this.onSearchXref2, this);
 				}
 				if (typeof oXref2Input.setValueHelpOnly === "function") {
 					oXref2Input.setValueHelpOnly(true);
@@ -358,6 +400,9 @@ sap.ui.define([
 					oInput.attachChange(this._handleAmountChange, this);
 				}
 			}.bind(this));
+		} catch (e) {
+			console.error("Error in _syncHeaderFields", e);
+		}
 		},
 
 		onSearchXref2: function (oEvent) {

@@ -103,24 +103,15 @@ sap.ui.define([
 			if (!oControl) {
 				var sPrefix = (this.getOwnerComponent && this.getOwnerComponent()) ? this.getOwnerComponent().getId() : (oView._sOwnerId || "");
 				var aPrefixes = [
-					sPrefix + "---MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
+					sPrefix + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
 					sPrefix + "---MMIV_HEADER_ID_S1--",
-					sPrefix + "---",
-					"MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
+					"MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
 					"MMIV_HEADER_ID_S1--"
 				];
 
 				for (var i = 0; i < aPrefixes.length; i++) {
 					oControl = sap.ui.getCore().byId(aPrefixes[i] + sFieldId);
 					if (oControl) break;
-				}
-			}
-
-			if (!oControl) {
-				var $el = jQuery("[id$='" + sFieldId + "']").first();
-				if ($el.length > 0) {
-					var sFullId = $el.attr("id");
-					oControl = sap.ui.getCore().byId(sFullId) || sap.ui.getCore().byId(sFullId.split("-")[0]);
 				}
 			}
 
