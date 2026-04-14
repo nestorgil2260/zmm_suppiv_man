@@ -75,8 +75,19 @@ sap.ui.define([
 			}
 
 			// Also hook into the value help icon button via DOM
+			// NOTE: must use document.getElementById (NOT jQuery #selector) because IDs contain dots
 			window.setTimeout(function () {
-				var $icon = jQuery("#" + sInputId + "-vhi, #" + sInputId + " .sapMInputBaseIconContainer button").first();
+				var elVhi = document.getElementById(sInputId + "-vhi");
+				var $icon = elVhi ? jQuery(elVhi) : jQuery();
+
+				if ($icon.length === 0) {
+					// Fallback: search inside the control's own DOM reference
+					var oDomRef = typeof oInput.getDomRef === "function" ? oInput.getDomRef() : null;
+					if (oDomRef) {
+						$icon = jQuery(oDomRef).find(".sapMInputBaseIconContainer button, [id$='-vhi']").first();
+					}
+				}
+
 				if ($icon.length > 0) {
 					$icon.off("click.zCustomHelp").on("click.zCustomHelp", function (e) {
 						e.stopImmediatePropagation();
@@ -87,7 +98,7 @@ sap.ui.define([
 				} else {
 					console.warn("Could not find value help button DOM for: " + sInputId);
 				}
-			}, 800);
+			}, 1200);
 		},
 
 		_ensureStateModel: function () {
@@ -171,16 +182,29 @@ sap.ui.define([
 		},
 
 		_getAssignmentReferenceInput: function () {
+			// Prefer the inner sap.m.Input (ending in -input) since that's the one with the value help button
 			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
 			if (oInput) {
+				// If we got the SmartField wrapper, try to get its inner Input
+				if (typeof oInput.getInnerControls === "function") {
+					var aInner = oInput.getInnerControls();
+					var oInner = aInner && aInner.find ? aInner.find(function (o) { return typeof o.getValue === "function" && o.getId().indexOf("-input") !== -1; }) : null;
+					if (oInner) { oInput = oInner; }
+				}
 				console.log("Discovery: AssignmentReference found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
 			}
 			return oInput;
 		},
 
 		_getAccountingHeaderTextInput: function () {
+			// Prefer the inner sap.m.Input (ending in -input) since that's the one with the value help button
 			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
 			if (oInput) {
+				if (typeof oInput.getInnerControls === "function") {
+					var aInner = oInput.getInnerControls();
+					var oInner = aInner && aInner.find ? aInner.find(function (o) { return typeof o.getValue === "function" && o.getId().indexOf("-input") !== -1; }) : null;
+					if (oInner) { oInput = oInner; }
+				}
 				console.log("Discovery: AccountingDocumentHeader found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
 			}
 			return oInput;
