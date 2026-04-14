@@ -47,13 +47,47 @@ sap.ui.define([
 				return;
 			}
 
+			// UI5 event delegate (catches keyboard F4)
 			oInput.addEventDelegate({
 				onsapshow: function (oEvent) {
 					fnHandler.call(this, oEvent);
 				}
 			}, this);
 
-			oInput.data(sKey, "true", true);
+			oInput.data(sKey, "true");
+		},
+
+		_wireValueHelpButton: function (oInput, fnHandler) {
+			if (!oInput) return;
+			var self = this;
+			var sInputId = oInput.getId();
+
+			// Attach via UI5 API first
+			if (typeof oInput.attachValueHelpRequest === "function") {
+				oInput.detachValueHelpRequest(fnHandler, self);
+				oInput.attachValueHelpRequest(fnHandler, self);
+			}
+
+			// Also attach to SAP show (F4 key)
+			if (typeof oInput.addEventDelegate === "function" && !oInput.data("_customHelpDelegated")) {
+				oInput.addEventDelegate({ onsapshow: function (oEvent) { fnHandler.call(self, oEvent); } }, self);
+				oInput.data("_customHelpDelegated", "true");
+			}
+
+			// Also hook into the value help icon button via DOM
+			window.setTimeout(function () {
+				var $icon = jQuery("#" + sInputId + "-vhi, #" + sInputId + " .sapMInputBaseIconContainer button").first();
+				if ($icon.length > 0) {
+					$icon.off("click.zCustomHelp").on("click.zCustomHelp", function (e) {
+						e.stopImmediatePropagation();
+						e.preventDefault();
+						fnHandler.call(self, { getSource: function () { return oInput; } });
+					});
+					console.log("Wired value help button DOM click for: " + sInputId);
+				} else {
+					console.warn("Could not find value help button DOM for: " + sInputId);
+				}
+			}, 800);
 		},
 
 		_ensureStateModel: function () {
@@ -136,58 +170,8 @@ sap.ui.define([
 			}) || oControl || null;
 		},
 
-		_getVisibleControl: function (sId) {
-			try {
-				var aAllControls = [];
-				var $elements = jQuery("[id$='" + sId + "']");
-				
-				$elements.each(function() {
-					var sFullId = this.id;
-					var oCtrl = sap.ui.getCore().byId(sFullId);
-					if (!oCtrl) { oCtrl = sap.ui.getCore().byId(sFullId.split("-")[0]); }
-					if (oCtrl && aAllControls.indexOf(oCtrl) === -1) {
-						aAllControls.push(oCtrl);
-					}
-				});
-
-				// Prioritize the one that is actually visible
-				var oVisible = aAllControls.find(function(oCtrl) {
-					var bVis = typeof oCtrl.getVisible === "function" ? oCtrl.getVisible() !== false : true;
-					return bVis && !!oCtrl.getDomRef();
-				});
-
-				return oVisible || aAllControls[0] || null;
-			} catch (e) {
-				return null;
-			}
-		},
-
-		_getFieldInput: function (sFieldId) {
-			var oView = this.getView();
-			var oField = oView.byId(sFieldId) || this._getVisibleControl(sFieldId) || this._getGlobalControl(sFieldId);
-			var aCandidates = this._collectControlCandidates(oField, []);
-			var aInputCandidates = aCandidates.filter(function (oCandidate) {
-				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
-			});
-			var oPreferredWithHandler = aInputCandidates.find(function (oCandidate) {
-				var bVisible = typeof oCandidate.getVisible === "function" ? oCandidate.getVisible() !== false : true;
-				var bCanAttachHelp = typeof oCandidate.attachValueHelpRequest === "function" || typeof oCandidate.attachEvent === "function";
-
-				return bVisible && bCanAttachHelp;
-			});
-			var oPreferred = aInputCandidates.find(function (oCandidate) {
-				var bVisible = typeof oCandidate.getVisible === "function" ? oCandidate.getVisible() !== false : true;
-				var bHasHelpApi = typeof oCandidate.attachValueHelpRequest === "function" || typeof oCandidate.fireValueHelpRequest === "function" || typeof oCandidate.setShowValueHelp === "function";
-
-				return bVisible && bHasHelpApi;
-			});
-
-			return oPreferredWithHandler || oPreferred || aInputCandidates[0] || this._getInnerControl(oField);
-		},
-
 		_getAssignmentReferenceInput: function () {
-			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
-			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
+			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
 			if (oInput) {
 				console.log("Discovery: AssignmentReference found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
 			}
@@ -195,12 +179,30 @@ sap.ui.define([
 		},
 
 		_getAccountingHeaderTextInput: function () {
-			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
-			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
 			if (oInput) {
 				console.log("Discovery: AccountingDocumentHeader found:", oInput.getId(), "Visible:", (typeof oInput.getVisible === "function" ? oInput.getVisible() : "unknown"));
 			}
 			return oInput;
+		},
+
+		_getFieldInput: function (sFieldId) {
+			var oView = this.getView();
+			var oField = oView.byId(sFieldId) || this._getGlobalControl(sFieldId);
+			
+			// Use jQuery to find the actual visible input (-input) in the DOM
+			var $el = jQuery("[id$='" + sFieldId + "-input']").first();
+			if ($el.length > 0) {
+				var oInner = sap.ui.getCore().byId($el.attr("id"));
+				if (oInner && typeof oInner.getValue === "function") return oInner;
+			}
+
+			var aCandidates = this._collectControlCandidates(oField, []);
+			var aInputCandidates = aCandidates.filter(function (oCandidate) {
+				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
+			});
+
+			return aInputCandidates.find(function(o) { return !!o.getDomRef(); }) || aInputCandidates[0] || this._getInnerControl(oField);
 		},
 
 		_getGlobalControl: function (sId) {
@@ -355,24 +357,13 @@ sap.ui.define([
 				if (typeof oXref1Input.setShowValueHelp === "function") {
 					oXref1Input.setShowValueHelp(true);
 				}
-				// Force event attachment as backup
-				if (typeof oXref1Input.attachValueHelpRequest === "function") {
-					oXref1Input.detachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
-					oXref1Input.attachValueHelpRequest(this.onValueHelpInputAssignmentReferenceZ, this);
-				}
-				if (typeof oXref1Input.detachEvent === "function" && typeof oXref1Input.attachEvent === "function") {
-					oXref1Input.detachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
-					oXref1Input.attachEvent("valueHelpRequest", this.onValueHelpInputAssignmentReferenceZ, this);
-				}
 				if (typeof oXref1Input.setValueHelpOnly === "function") {
 					oXref1Input.setValueHelpOnly(false);
 				}
 				if (typeof oXref1Input.setEditable === "function") {
 					oXref1Input.setEditable(true);
 				}
-				if (typeof oXref1Input.setShowValueHelp === "function") {
-					oXref1Input.setShowValueHelp(true);
-				}
+				this._wireValueHelpButton(oXref1Input, this.onValueHelpInputAssignmentReferenceZ);
 			}
 
 			if (oXref2Input) {
@@ -381,28 +372,13 @@ sap.ui.define([
 				if (typeof oXref2Input.setEnabled === "function") {
 					oXref2Input.setEnabled(true);
 				}
-				if (typeof oXref2Input.setShowValueHelp === "function") {
-					oXref2Input.setShowValueHelp(true);
-				}
-				// Force event attachment as backup
-				if (typeof oXref2Input.attachValueHelpRequest === "function") {
-					oXref2Input.detachValueHelpRequest(this.onSearchXref2, this);
-					oXref2Input.attachValueHelpRequest(this.onSearchXref2, this);
-				}
-				if (typeof oXref2Input.detachEvent === "function" && typeof oXref2Input.attachEvent === "function") {
-					oXref2Input.detachEvent("valueHelpRequest", this.onSearchXref2, this);
-					oXref2Input.attachEvent("valueHelpRequest", this.onSearchXref2, this);
-				}
 				if (typeof oXref2Input.setValueHelpOnly === "function") {
 					oXref2Input.setValueHelpOnly(true);
 				}
 				if (typeof oXref2Input.setEditable === "function") {
 					oXref2Input.setEditable(true);
 				}
-				if (typeof oXref2Input.setShowValueHelp === "function") {
-					oXref2Input.setShowValueHelp(true);
-				}
-				this._attachValueHelpFallbackDelegate(oXref2Input, "xref2SapShowAttached", this.onSearchXref2);
+				this._wireValueHelpButton(oXref2Input, this.onSearchXref2);
 			}
 
 			this._wireInputOnce(oGrossAmount, "xrefAmountChangeAttached", function (oInput) {

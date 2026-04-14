@@ -98,41 +98,38 @@ sap.ui.define([
 
 		_getHeaderFieldInput: function (sFieldId) {
 			var oView = this.getView();
-			var oControl = oView.byId(sFieldId);
+			var oField = oView.byId(sFieldId) || this._getGlobalControl(sFieldId);
 
-			if (!oControl) {
-				var sPrefix = (this.getOwnerComponent && this.getOwnerComponent()) ? this.getOwnerComponent().getId() : (oView._sOwnerId || "");
-				var aPrefixes = [
-					sPrefix + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
-					sPrefix + "---MMIV_HEADER_ID_S1--",
-					"MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--",
-					"MMIV_HEADER_ID_S1--"
-				];
-
-				for (var i = 0; i < aPrefixes.length; i++) {
-					oControl = sap.ui.getCore().byId(aPrefixes[i] + sFieldId);
-					if (oControl) break;
-				}
+			if (!oField) {
+				var sPrefix = (this.getView()._sOwnerId || "") + "---MMIV_HEADER_ID_S1--idS2P.MM.MSI.HeaderMore-defaultXML--";
+				oField = sap.ui.getCore().byId(sPrefix + sFieldId);
 			}
 
-			if (!oControl) {
-				oControl = sap.ui.getCore().byId(sFieldId);
+			// Use jQuery to find the actual visible input (-input) in the DOM
+			var $el = jQuery("[id$='" + sFieldId + "-input']").first();
+			if ($el.length === 0) { $el = jQuery("[id$='" + sFieldId + "']").first(); }
+			
+			if ($el.length > 0) {
+				var oInner = sap.ui.getCore().byId($el.attr("id"));
+				if (oInner && typeof oInner.getValue === "function") return oInner;
 			}
 
-			return this._findBestMatchingControl(oControl, function (oCandidate) {
+			if (!oField) { oField = sap.ui.getCore().byId(sFieldId); }
+
+			return this._findBestMatchingControl(oField, function (oCandidate) {
 				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
-			}) || oControl || null;
+			}) || oField || null;
 		},
 
 		_getHeaderFieldValue: function (sFieldId, sProperty) {
-			var oInput = this._getHeaderFieldInput(sFieldId);
+			var oInput = this._getHeaderFieldInput(sFieldId) || this._getHeaderFieldInput(sFieldId + "Z");
 			var sValue = oInput && typeof oInput.getValue === "function" ? oInput.getValue() : this._getHeaderContextValue(sProperty);
 
 			return (sValue || "").trim();
 		},
 
 		_setHeaderFieldValueState: function (sFieldId, sState, sText) {
-			var oInput = this._getHeaderFieldInput(sFieldId);
+			var oInput = this._getHeaderFieldInput(sFieldId) || this._getHeaderFieldInput(sFieldId + "Z");
 
 			if (oInput && typeof oInput.setValueState === "function") {
 				oInput.setValueState(sState || sap.ui.core.ValueState.None);
@@ -141,13 +138,35 @@ sap.ui.define([
 			if (oInput && typeof oInput.setValueStateText === "function") {
 				oInput.setValueStateText(sText || "");
 			}
+			
+			// Centralize MessageManager logic
+			if (oInput && sState === sap.ui.core.ValueState.Error && sText) {
+				var oMsgManager = sap.ui.getCore().getMessageManager();
+				// Remove existing messages for this target to avoid duplicates
+				var sTarget = oInput.getId() + "/value";
+				oMsgManager.removeMessages(oMsgManager.getMessageModel().getData().filter(function(m) {
+					return m.target === sTarget || m.message === sText;
+				}));
+				
+				oMsgManager.addMessages(new sap.ui.core.message.Message({
+					message: sText,
+					type: sap.ui.core.message.MessageType.Error,
+					target: sTarget,
+					processor: this.getView().getModel()
+				}));
+			} else if (oInput && sState === sap.ui.core.ValueState.None) {
+				var oMsgManager = sap.ui.getCore().getMessageManager();
+				oMsgManager.removeMessages(oMsgManager.getMessageModel().getData().filter(function(m) {
+					return m.target === (oInput.getId() + "/value") || m.target === oInput.getId();
+				}));
+			}
 		},
 
 		_validateHeaderReferences: function () {
 			console.log("S1Custom._validateHeaderReferences - START");
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference");
-			var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+			var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
+			var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
 
 			console.log("Validation: Xref1 Input found:", oXref1 ? oXref1.getId() : "NOT FOUND");
 			console.log("Validation: Xref2 Input found:", oXref2 ? oXref2.getId() : "NOT FOUND");
@@ -157,8 +176,9 @@ sap.ui.define([
 			var sXref2Status = this._getXref2Status();
 			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
 
-			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
 			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
+			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
+
 
 			if (bRequiresXref2) {
 				if (!sAccountingDocumentHeaderText) {
@@ -190,9 +210,9 @@ sap.ui.define([
 			}
 
 			if (!sAssignmentReference) {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.Error, "El campo Clv.Ref.1 es obligatorio");
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "El campo Clv.Ref.1 es obligatorio");
-				this._setHeaderFieldValueState("label0", sap.ui.core.ValueState.Error, "");
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "XRef1 es obligatorio");
+				sap.m.MessageToast.show("XRef1 es obligatorio");
+				
 				// Add message to MessageManager so it appears in the standard message popover
 				try {
 					var oContext = this.getView().getBindingContext && this.getView().getBindingContext();
