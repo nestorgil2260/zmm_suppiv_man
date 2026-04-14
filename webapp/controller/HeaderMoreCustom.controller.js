@@ -10,6 +10,7 @@ sap.ui.define([
 		//    }
 
 		onInit: function () {
+			console.log("HeaderMoreCustom.onInit - START");
 			this._ensureStateModel();
 			this._attachHeaderViewDelegate();
 			this._scheduleHeaderSync();
@@ -52,7 +53,7 @@ sap.ui.define([
 				}
 			}, this);
 
-			oInput.data(sKey, true, true);
+			oInput.data(sKey, "true", true);
 		},
 
 		_ensureStateModel: function () {
@@ -158,11 +159,17 @@ sap.ui.define([
 		},
 
 		_getAssignmentReferenceInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ") || this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
+			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
+			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
+			console.log("Discovery: AssignmentReference Input found:", oInput ? oInput.getId() : "NOT FOUND");
+			return oInput;
 		},
 
 		_getAccountingHeaderTextInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z") || this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+			var oInput = this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
+			if (!oInput) oInput = this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+			console.log("Discovery: AccountingDocumentHeader Input found:", oInput ? oInput.getId() : "NOT FOUND");
+			return oInput;
 		},
 
 		_getGlobalControl: function (sId) {
@@ -250,7 +257,7 @@ sap.ui.define([
 			bAttached = fnCallback(oInput);
 
 			if (bAttached !== false) {
-				oInput.data(sKey, true, true);
+				oInput.data(sKey, "true", true);
 			}
 		},
 

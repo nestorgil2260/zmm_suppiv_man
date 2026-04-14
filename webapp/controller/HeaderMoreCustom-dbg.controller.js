@@ -10,6 +10,7 @@ sap.ui.define([
 		//    }
 
 		onInit: function () {
+			console.log("HeaderMoreCustom.onInit - START");
 			this._ensureStateModel();
 			this._attachHeaderViewDelegate();
 			this._scheduleHeaderSync();
@@ -52,7 +53,7 @@ sap.ui.define([
 				}
 			}, this);
 
-			oInput.data(sKey, true, true);
+			oInput.data(sKey, "true", true);
 		},
 
 		_ensureStateModel: function () {

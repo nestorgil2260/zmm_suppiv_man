@@ -155,8 +155,14 @@ sap.ui.define([
 		_validateHeaderReferences: function () {
 			console.log("S1Custom._validateHeaderReferences - START");
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReferenceZ", "AssignmentReference") || this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference", "AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference2Z", "AccountingDocumentHeaderText") || this._getHeaderFieldValue("idS2P.MM.MSI.InputAccountingDocumentHeaderText", "AccountingDocumentHeaderText");
+			var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference");
+			var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+
+			console.log("Validation: Xref1 Input found:", oXref1 ? oXref1.getId() : "NOT FOUND");
+			console.log("Validation: Xref2 Input found:", oXref2 ? oXref2.getId() : "NOT FOUND");
+
+			var sAssignmentReference = oXref1 && typeof oXref1.getValue === "function" ? oXref1.getValue() : this._getHeaderContextValue("AssignmentReference");
+			var sAccountingDocumentHeaderText = oXref2 && typeof oXref2.getValue === "function" ? oXref2.getValue() : this._getHeaderContextValue("AccountingDocumentHeaderText");
 			var sXref2Status = this._getXref2Status();
 			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
 
