@@ -1,5 +1,5 @@
 <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns:smartField="sap.ui.comp.smartfield"
-	xmlns:smartForm="sap.ui.comp.smartform" xmlns="sap.m" controllerName="ui.s2p.mm.supplinvoice.manage.s1.controller.HeaderMore"
+	xmlns:smartForm="sap.ui.comp.smartform" xmlns="sap.m" controllerName="ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.controller.HeaderMoreCustom"
 	xmlns:f="sap.ui.layout.form" id="idS2P.MM.MSI.ViewHeaderMore">
 	<f:SimpleForm class="editableForm" columnsL="2" columnsM="1" editable="true" id="idS2P.MM.MSI.CESimpleFormCancelInvoice" labelSpanL="4"
 		labelSpanM="4" layout="ResponsiveGridLayout">
@@ -9,10 +9,10 @@
 			<!--========================================================================================= -->
 			<Label text="Clave referencia 1" width="100%" id="label0"/>
 			<Input id="idS2P.MM.MSI.InputAssignmentReferenceZ" value="{AssignmentReference}" showValueHelp="true" showSuggestion="true" fieldWidth="40%"
-				liveChange="onAfterRendering" valueHelpRequest="onValueHelpInputAssignmentReferenceZ"></Input>
+				valueHelpRequest="onValueHelpInputAssignmentReferenceZ"></Input>
 			<Label text="Clave referencia 2" width="100%" id="label2"/>
 			<Input id="idS2P.MM.MSI.InputAssignmentReference2Z" value="{AccountingDocumentHeaderText}"	fieldWidth="40%"
-				liveChange="onAfterRendering" valueHelpRequest="onSearchXref2" showValueHelp="true" valueHelpOnly="true"></Input>
+				valueHelpRequest="onSearchXref2" showValueHelp="true" valueHelpOnly="true"></Input>
 		</f:content>
 	</f:SimpleForm>
 	<smartForm:SmartForm editable="{fullScreen>/EditMode}" entityType="Header" id="S2P.MM.MSI.SmartFormGeneralDataMore"

@@ -53,6 +53,135 @@ sap.ui.define([
 				oModel.setProperty(oContext.getPath() + "/" + sProperty, vValue);
 			}
 		},
+
+		_collectControlCandidates: function (oControl, aCandidates) {
+			var aResult = aCandidates || [];
+			var oMetadata;
+			var mAggregations;
+
+			if (!oControl || aResult.indexOf(oControl) !== -1) {
+				return aResult;
+			}
+
+			aResult.push(oControl);
+			oMetadata = oControl.getMetadata && oControl.getMetadata();
+			mAggregations = oMetadata && oMetadata.getAllAggregations ? oMetadata.getAllAggregations() : null;
+
+			Object.keys(mAggregations || {}).forEach(function (sAggregationName) {
+				var oAggregation = mAggregations[sAggregationName];
+				var sGetterName = oAggregation && oAggregation._sGetter;
+				var vChildren;
+
+				if (!sGetterName || typeof oControl[sGetterName] !== "function") {
+					return;
+				}
+
+				vChildren = oControl[sGetterName]();
+
+				if (Array.isArray(vChildren)) {
+					vChildren.forEach(function (oChild) {
+						this._collectControlCandidates(oChild, aResult);
+					}.bind(this));
+				} else {
+					this._collectControlCandidates(vChildren, aResult);
+				}
+			}.bind(this));
+
+			return aResult;
+		},
+
+		_findBestMatchingControl: function (oControl, fnMatcher) {
+			var aCandidates = this._collectControlCandidates(oControl, []);
+
+			return aCandidates.find(fnMatcher) || null;
+		},
+
+		_getHeaderFieldInput: function (sFieldId) {
+			var oControl = this.getView().byId(sFieldId);
+
+			return this._findBestMatchingControl(oControl, function (oCandidate) {
+				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
+			}) || oControl || null;
+		},
+
+		_getHeaderFieldValue: function (sFieldId, sProperty) {
+			var oInput = this._getHeaderFieldInput(sFieldId);
+			var sValue = oInput && typeof oInput.getValue === "function" ? oInput.getValue() : this._getHeaderContextValue(sProperty);
+
+			return (sValue || "").trim();
+		},
+
+		_setHeaderFieldValueState: function (sFieldId, sState, sText) {
+			var oInput = this._getHeaderFieldInput(sFieldId);
+
+			if (oInput && typeof oInput.setValueState === "function") {
+				oInput.setValueState(sState || sap.ui.core.ValueState.None);
+			}
+
+			if (oInput && typeof oInput.setValueStateText === "function") {
+				oInput.setValueStateText(sText || "");
+			}
+		},
+
+		_validateHeaderReferences: function () {
+			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
+			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference", "AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAccountingDocumentHeaderText",
+				"AccountingDocumentHeaderText");
+			var sXref2Status = this._getXref2Status();
+			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
+
+			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
+
+			if (bRequiresXref2) {
+				if (!sAccountingDocumentHeaderText) {
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+						"El campo Clv.Ref.2 es obligatorio");
+					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
+					return false;
+				}
+
+				if (sXref2Status === "") {
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+						"El código de cliente interno no es un aprobador válido");
+					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
+					return false;
+				}
+
+				if (sXref2Status === "B") {
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+						"El código de cliente int. no es un aprobador válido de acuerdo al monto");
+					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
+					return false;
+				}
+
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.None, "");
+			} else {
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.None, "");
+			}
+
+			if (!sAssignmentReference) {
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error,
+					"El campo Clv.Ref.1 es obligatorio");
+				// Add message to MessageManager so it appears in the standard message popover
+				try {
+					var oContext = this.getView().getBindingContext && this.getView().getBindingContext();
+					var sTarget = oContext ? oContext.getPath() + "/AssignmentReference" : "";
+					var oMessage = new sap.ui.core.message.Message({
+						message: "El campo Clv.Ref.1 es obligatorio",
+						type: sap.ui.core.MessageType.Error,
+						target: sTarget
+					});
+					sap.ui.getCore().getMessageManager().addMessages(oMessage);
+				} catch (e) {
+					// fallback to toast if MessageManager not available
+					sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
+				}
+				return false;
+			}
+
+			return true;
+		},
 		// setJournalEntriesButtonEnabled: function () {
 		// 	if (!this.oCrossAppNavigator) {
 		// 		this.oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
@@ -247,28 +376,7 @@ sap.ui.define([
 
 		doPostAction: function () {
 
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
-			var sXref2Status = this._getXref2Status();
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-				if (!sAccountingDocumentHeaderText) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (sXref2Status === "") {
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return;
-				} else if (sXref2Status === "B") {
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return;
-				}
-
-			}
-
-			if (!sAssignmentReference) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else {
+			if (this._validateHeaderReferences()) {
 
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 				oPedido.data("Estado", "Post", true);
@@ -344,7 +452,7 @@ sap.ui.define([
 			if (mostrarPopUp === "X") {
 
 				if (mostrarPopUpWorkflow === "X") {
-					// this._getDialogPopUpWorkflow().open();
+				 	this._getDialogPopUpWorkflow().open();
 				}
 				// Se encontro una forma mejor usando aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData()
 				// this.oMessageModel.oData = zoDataTemp;
@@ -435,6 +543,16 @@ sap.ui.define([
 
 				oTable.data("VariableR", null, true);
 
+			} else if (mostrarPopUpWorkflow === "X") {
+
+				this._getDialogPopUpWorkflow().open();
+
+				var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
+				var sMessage = aMessages.filter(function (mItem) {
+					return mItem.code === "ZMM_MENSAJES/022";
+				});
+				sap.ui.getCore().getMessageManager().removeMessages(sMessage);
+
 			} else {
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 
@@ -457,28 +575,7 @@ sap.ui.define([
 
 		doCheckAction: function () {
 
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
-			var sXref2Status = this._getXref2Status();
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-				if (!sAccountingDocumentHeaderText) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (sXref2Status === "") {
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return;
-				} else if (sXref2Status === "B") {
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return;
-				}
-
-			}
-
-			if (!sAssignmentReference) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else {
+			if (this._validateHeaderReferences()) {
 
 				this.oMessagePopover.close();
 				this.submitChanges(null, jQuery.proxy(this.doCheckCallback, this), jQuery.proxy(this.doCheckCallback, this));
@@ -651,28 +748,7 @@ sap.ui.define([
 
 		doSimulateAction: function () {
 
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
-			var sXref2Status = this._getXref2Status();
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-				if (!sAccountingDocumentHeaderText) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (sXref2Status === "") {
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return;
-				} else if (sXref2Status === "B") {
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return;
-				}
-
-			}
-
-			if (!sAssignmentReference) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else {
+			if (this._validateHeaderReferences()) {
 
 				this.oAppController.doAction(C.SIMULATE, jQuery.proxy(function () {
 					this._getComponent().oEventBus.subscribeOnce("ui.s2p.mm.supplinvoice.manage.s1", C.EVENT_REQUEST_COMPLETED, function () {
@@ -1365,6 +1441,31 @@ sap.ui.define([
 			}
 		},
 
+		_handleWorkflowPopupCompletionByState: function () {
+
+			var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
+			var sEstado = oPedido && oPedido.data("Estado");
+			var r = oPedido && oPedido.data("r");
+
+			if (sEstado === "EstadoPostPlus") {
+				oPedido.data("Estado", null, true);
+
+				this._createDeferredForParkHoldAndPostAction().then(jQuery.proxy(function () {
+					this.oAppController.doAction(C.POST, jQuery.proxy(this.doPostSuccessCallback, this), jQuery.proxy(this.doPostHoldDiscardErrorCallback,
+						this));
+				}, this));
+
+				return;
+			}
+
+			if (r) {
+				this.oAppController.saveAsCompletedActionSuccessCallback(r);
+				if (this.getIsFromExternalApp()) {
+					this.oAppController.restartAppDependingOnMode(r[C.SAVE_PRELIM].SupplierInvoice, r[C.SAVE_PRELIM].FiscalYear);
+				}
+			}
+		},
+
 		yesDialogPopUpWorkflow: function () {
 
 			var that = this;
@@ -1395,18 +1496,7 @@ sap.ui.define([
 				method: "POST",
 				urlParameters: oProperty,
 				success: function (oData, response) {
-
-					var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
-					var r = oPedido.data("r");
-
-					var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
-
-					var r = oPedido.data("r");
-
-					this.oAppController.saveAsCompletedActionSuccessCallback(r);
-					if (this.getIsFromExternalApp()) {
-						this.oAppController.restartAppDependingOnMode(r[C.SAVE_PRELIM].SupplierInvoice, r[C.SAVE_PRELIM].FiscalYear);
-					}
+					this._handleWorkflowPopupCompletionByState();
 
 					// this.setBusy(false);
 				}.bind(this), // callback function for success
@@ -1448,18 +1538,7 @@ sap.ui.define([
 				method: "POST",
 				urlParameters: oProperty,
 				success: function (oData, response) {
-
-					var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
-					var r = oPedido.data("r");
-
-					var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
-
-					var r = oPedido.data("r");
-
-					this.oAppController.saveAsCompletedActionSuccessCallback(r);
-					if (this.getIsFromExternalApp()) {
-						this.oAppController.restartAppDependingOnMode(r[C.SAVE_PRELIM].SupplierInvoice, r[C.SAVE_PRELIM].FiscalYear);
-					}
+					this._handleWorkflowPopupCompletionByState();
 
 					// this.setBusy(false);
 				}.bind(this), // callback function for success
@@ -1483,28 +1562,7 @@ sap.ui.define([
 		},
 		doSaveAsCompletedAction: function () {
 
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
-			var sXref2Status = this._getXref2Status();
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-				if (!sAccountingDocumentHeaderText) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (sXref2Status === "") {
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return;
-				} else if (sXref2Status === "B") {
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return;
-				}
-
-			}
-
-			if (!sAssignmentReference) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else {
+			if (this._validateHeaderReferences()) {
 
 				var o = {};
 				o.SaveAction = C.SAVE_ACTION_SAVE_AS_COMPLETED;
@@ -1523,28 +1581,7 @@ sap.ui.define([
 		},
 		doHoldParkAction: function (o, s) {
 
-			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderContextValue("AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderContextValue("AccountingDocumentHeaderText");
-			var sXref2Status = this._getXref2Status();
-
-			if (CompanyCode && CompanyCode.getValue() === "3000") {
-				if (!sAccountingDocumentHeaderText) {
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
-					return;
-				} else if (sXref2Status === "") {
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return;
-				} else if (sXref2Status === "B") {
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return;
-				}
-
-			}
-
-			if (!sAssignmentReference) {
-				sap.m.MessageToast.show("El campo Clv.Ref.1 es obligatorio");
-			} else {
+			if (this._validateHeaderReferences()) {
 
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 				oPedido.data("Estado", "Guardar", true);
@@ -1746,6 +1783,16 @@ sap.ui.define([
 							}
 
 						}
+
+					} else if (mostrarPopUpWorkflow === "X") {
+
+						this._getDialogPopUpWorkflow().open();
+
+						var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
+						var sMessage = aMessages.filter(function (mItem) {
+							return mItem.code === "ZMM_MENSAJES/022";
+						});
+						sap.ui.getCore().getMessageManager().removeMessages(sMessage);
 
 					} else {
 						this.oAppController.saveAsCompletedActionSuccessCallback(r);
