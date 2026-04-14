@@ -166,7 +166,40 @@ sap.ui.define([
 		},
 
 		_getGlobalControl: function (sId) {
-			return sap.ui.getCore().byId(this.getView()._sOwnerId + "---MMIV_HEADER_ID_S1--" + sId);
+			var oControl = sap.ui.getCore().byId(sId);
+			if (oControl) return oControl;
+
+			var sViewId = this.getView().getId();
+			oControl = sap.ui.getCore().byId(sViewId + "--" + sId);
+			if (oControl) return oControl;
+
+			var sPrefix = (this.getView()._sOwnerId || "");
+			var aPrefixes = [
+				sPrefix + "---MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
+				sPrefix + "---MMIV_HEADER_ID_S1--",
+				sPrefix + "---",
+				"MMIV_HEADER_ID_S1--HeaderMore-defaultXML--",
+				"MMIV_HEADER_ID_S1--"
+			];
+
+			for (var i = 0; i < aPrefixes.length; i++) {
+				oControl = sap.ui.getCore().byId(aPrefixes[i] + sId);
+				if (oControl) return oControl;
+			}
+
+			// Extreme fallback: Search by ID suffix in DOM
+			var $el = jQuery("[id$='" + sId + "']").first();
+			if ($el.length > 0) {
+				var sFullId = $el.attr("id");
+				// Many controls have suffixes like -inner. Try to find the control ID.
+				oControl = sap.ui.getCore().byId(sFullId);
+				if (!oControl) {
+					var sBaseId = sFullId.split("-")[0];
+					oControl = sap.ui.getCore().byId(sBaseId);
+				}
+			}
+
+			return oControl;
 		},
 
 		_getCompanyCodeValue: function () {
