@@ -97,7 +97,18 @@ sap.ui.define([
 		},
 
 		_getHeaderFieldInput: function (sFieldId) {
-			var oControl = this.getView().byId(sFieldId);
+			var oView = this.getView();
+			var oControl = oView.byId(sFieldId);
+
+			if (!oControl) {
+				// Try finding the control in the embedded HeaderMore view or globally
+				var sOwnerId = (oView.getController && oView.getController().getOwnerComponent && oView.getController().getOwnerComponent().getId()) || oView._sOwnerId;
+				oControl = sap.ui.getCore().byId(sOwnerId + "---MMIV_HEADER_ID_S1--" + sFieldId);
+			}
+
+			if (!oControl) {
+				oControl = sap.ui.getCore().byId(sFieldId);
+			}
 
 			return this._findBestMatchingControl(oControl, function (oCandidate) {
 				return !!oCandidate && typeof oCandidate.getValue === "function" && typeof oCandidate.setValue === "function";
@@ -125,43 +136,40 @@ sap.ui.define([
 
 		_validateHeaderReferences: function () {
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference", "AssignmentReference");
-			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAccountingDocumentHeaderText",
+			var sAssignmentReference = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReferenceZ", "AssignmentReference");
+			var sAccountingDocumentHeaderText = this._getHeaderFieldValue("idS2P.MM.MSI.InputAssignmentReference2Z",
 				"AccountingDocumentHeaderText");
 			var sXref2Status = this._getXref2Status();
 			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
 
-			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
+			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
 
 			if (bRequiresXref2) {
 				if (!sAccountingDocumentHeaderText) {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
 						"El campo Clv.Ref.2 es obligatorio");
 					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
 					return false;
 				}
 
 				if (sXref2Status === "") {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
 						"El código de cliente interno no es un aprobador válido");
 					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
 					return false;
 				}
 
 				if (sXref2Status === "B") {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
 						"El código de cliente int. no es un aprobador válido de acuerdo al monto");
 					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
 					return false;
 				}
 
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.None, "");
-			} else {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.None, "");
-			}
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
 
 			if (!sAssignmentReference) {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error,
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.Error,
 					"El campo Clv.Ref.1 es obligatorio");
 				// Add message to MessageManager so it appears in the standard message popover
 				try {
@@ -240,7 +248,7 @@ sap.ui.define([
 		CompanyCodeChange: function (oEvent) {
 
 			var CompanyCode = this.getView().byId("idS2P.MM.MSI.CEInputCompanyCode");
-			var xref2 = this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
+			var xref2 = this.getView().byId("label2") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z-label") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
 
 			if (CompanyCode && CompanyCode.getValue() === "3000") {
 

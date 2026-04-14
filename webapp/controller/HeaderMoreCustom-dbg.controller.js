@@ -157,11 +157,11 @@ sap.ui.define([
 		},
 
 		_getAssignmentReferenceInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference");
+			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
 		},
 
 		_getAccountingHeaderTextInput: function () {
-			return this._getFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
+			return this._getFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
 		},
 
 		_getGlobalControl: function (sId) {
@@ -237,10 +237,10 @@ sap.ui.define([
 		_syncHeaderFields: function () {
 			var oXref1Input = this._getAssignmentReferenceInput();
 			var oXref2Input = this._getAccountingHeaderTextInput();
-			var oXref1Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference");
-			var oXref2Field = this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText");
-			var oAssignmentLabel = this.getView().byId("label0") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
-			var oHeaderTextLabel = this.getView().byId("label2") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
+			var oXref1Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ");
+			var oXref2Field = this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z");
+			var oAssignmentLabel = this.getView().byId("label0") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReferenceZ-label") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference-label");
+			var oHeaderTextLabel = this.getView().byId("label2") || this.getView().byId("idS2P.MM.MSI.InputAssignmentReference2Z-label") || this.getView().byId("idS2P.MM.MSI.InputAccountingDocumentHeaderText-label");
 			var oFullScreenModel = this.getView().getModel("fullScreen");
 			var sCompanyCode = this._getCompanyCodeValue();
 			var oGrossAmount = this._getGlobalControl("idS2P.MM.MSI.CEInputInvoiceGrossAmount");
@@ -385,11 +385,15 @@ sap.ui.define([
 						name: "ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH",
 						controller: this
 					}).then(function(oDialog){
+						console.log("HeaderMoreCustom: oDialog loaded successfully");
 						this.oDialog = oDialog;
 						this.getView().addDependent(this.oDialog);
 						this.oDialog.setModel(ozModel);
 						fnOpenDialog();
-					}.bind(this));
+					}.bind(this)).catch(function(oError){
+						console.error("HeaderMoreCustom: Error loading fragment popUpXref2VH", oError);
+						sap.m.MessageBox.error("Error al cargar la ayuda de búsqueda: " + oError.message);
+					});
 				} else {
 					this.oDialog = sap.ui.xmlfragment("ui.s2p.mm.supplinvoice.manage.s1.ZMM_SUPPIV_MANS1Extension.fragment.popUpXref2VH", this);
 					this.getView().addDependent(this.oDialog);
