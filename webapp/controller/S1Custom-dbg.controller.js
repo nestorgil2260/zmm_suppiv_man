@@ -467,6 +467,8 @@ sap.ui.define([
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 				oPedido.data("Estado", "Post", true);
 				this.doSimulateAction();
+			} else {
+				setTimeout(function () { this.oMessagePopover.openBy(this.oMessagesIndicator); }.bind(this), 0);
 			}
 
 			// this._createDeferredForParkHoldAndPostAction().then(jQuery.proxy(function () {
@@ -662,6 +664,8 @@ sap.ui.define([
 			if (this._validateHeaderReferences()) {
 				this.oMessagePopover.close();
 				this.submitChanges(null, jQuery.proxy(this.doCheckCallback, this), jQuery.proxy(this.doCheckCallback, this));
+			} else {
+				setTimeout(function () { this.oMessagePopover.openBy(this.oMessagesIndicator); }.bind(this), 0);
 			}
 		},
 		doCheckCallback: function () {
@@ -1194,6 +1198,8 @@ sap.ui.define([
 						}
 					}, this);
 				}, this), jQuery.proxy(this.doSimulateErrorCallback, this));
+			} else {
+				setTimeout(function () { this.oMessagePopover.openBy(this.oMessagesIndicator); }.bind(this), 0);
 			}
 		},
 
@@ -1341,6 +1347,7 @@ sap.ui.define([
 						this);
 					//debugger;
 					oPedido.data("_getDialogPopUp", this.dialog, true);
+					this.getView().addDependent(this.dialog);
 				} else {
 					this.dialog = oPedido.data("_getDialogPopUp");
 				}
@@ -1362,6 +1369,7 @@ sap.ui.define([
 						this);
 					//debugger;
 					oPedido.data("_getDialogPopUpWorkflow", this.dialogWorkflow, true);
+					this.getView().addDependent(this.dialogWorkflow);
 				} else {
 					this.dialogWorkflow = oPedido.data("_getDialogPopUpWorkflow");
 				}
@@ -1391,6 +1399,7 @@ sap.ui.define([
 						this);
 					//debugger;
 					oPedido.data("_getDialogPopUpSim", this.dialogSim, true);
+					this.getView().addDependent(this.dialogSim);
 				} else {
 					this.dialogSim = oPedido.data("_getDialogPopUpSim");
 				}
@@ -1420,6 +1429,7 @@ sap.ui.define([
 						this);
 					//debugger;
 					oPedido.data("_getDialogPopUpPost", this.dialogPost, true);
+					this.getView().addDependent(this.dialogPost);
 				} else {
 					this.dialogPost = oPedido.data("_getDialogPopUpPost");
 				}
@@ -1449,6 +1459,7 @@ sap.ui.define([
 						this);
 					//debugger;
 					oPedido.data("_getDialogPopUpComp", this.dialogComp, true);
+					this.getView().addDependent(this.dialogComp);
 				} else {
 					this.dialogComp = oPedido.data("_getDialogPopUpComp");
 				}
@@ -1648,6 +1659,8 @@ sap.ui.define([
 				var o = {};
 				o.SaveAction = C.SAVE_ACTION_SAVE_AS_COMPLETED;
 				this.doHoldParkAction(o, this.doSaveAsCompletedSuccessCallback);
+			} else {
+				setTimeout(function () { this.oMessagePopover.openBy(this.oMessagesIndicator); }.bind(this), 0);
 			}
 
 			// ----------------------------------- estandar
@@ -1668,6 +1681,8 @@ sap.ui.define([
 					this.oAppController.doAction(C.SAVE_PRELIM, jQuery.proxy(s, this), jQuery.proxy(this.doPostHoldDiscardErrorCallback, this),
 						o);
 				}, this));
+			} else {
+				setTimeout(function () { this.oMessagePopover.openBy(this.oMessagesIndicator); }.bind(this), 0);
 			}
 
 			// ----------------------------------------------estandar
