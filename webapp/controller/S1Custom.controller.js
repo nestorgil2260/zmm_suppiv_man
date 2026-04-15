@@ -12,6 +12,8 @@ sap.ui.define([
 		ODataHelper: O,
 		CommonHelper: a,
 		_dialogGlobal: null,
+
+
 		_getXrefStateModel: function () {
 			var oComponent = this.getOwnerComponent && this.getOwnerComponent();
 			return oComponent ? oComponent.getModel("xrefState") : null;
@@ -163,91 +165,113 @@ sap.ui.define([
 		},
 
 		_validateHeaderReferences: function () {
-			console.log("S1Custom._validateHeaderReferences - START");
-			var oView = this.getView();
-			var CompanyCode = oView.byId("idS2P.MM.MSI.CEInputCompanyCode");
+			try {
+				console.log("S1Custom._validateHeaderReferences - START");
+				var oView = this.getView();
+				var CompanyCode = oView.byId("idS2P.MM.MSI.CEInputCompanyCode");
 
-			// Discover input controls
-			var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
-			var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
-			console.log("Validation: Xref1 found:", oXref1 ? oXref1.getId() : "NOT FOUND");
-			console.log("Validation: Xref2 found:", oXref2 ? oXref2.getId() : "NOT FOUND");
+				// Discover input controls
+				var oXref1 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReferenceZ");
+				var oXref2 = this._getHeaderFieldInput("idS2P.MM.MSI.InputAccountingDocumentHeaderText") || this._getHeaderFieldInput("idS2P.MM.MSI.InputAssignmentReference2Z");
+				console.log("Validation: Xref1 found:", oXref1 ? oXref1.getId() : "NOT FOUND");
+				console.log("Validation: Xref2 found:", oXref2 ? oXref2.getId() : "NOT FOUND");
 
-			// Read values: prefer from OData binding context (most reliable in Fiori) with input fallback
-			var oContext = oView.getBindingContext && oView.getBindingContext();
-			var sAssignmentReference = (oContext ? oContext.getProperty("AssignmentReference") : null)
-				|| (oXref1 && typeof oXref1.getValue === "function" ? oXref1.getValue() : "");
-			var sAccountingDocumentHeaderText = (oContext ? oContext.getProperty("AccountingDocumentHeaderText") : null)
-				|| (oXref2 && typeof oXref2.getValue === "function" ? oXref2.getValue() : "");
-			sAssignmentReference = (sAssignmentReference || "").trim();
-			sAccountingDocumentHeaderText = (sAccountingDocumentHeaderText || "").trim();
+				// Read values: ALWAYS prefer from input control (what user sees), OData context as last fallback
+				var sXref1FromInput = oXref1 && typeof oXref1.getValue === "function" ? oXref1.getValue() : null;
+				var sXref2FromInput = oXref2 && typeof oXref2.getValue === "function" ? oXref2.getValue() : null;
 
-			var sXref2Status = this._getXref2Status();
-			var bRequiresXref2 = CompanyCode && CompanyCode.getValue() === "3000";
+				var oContext = oView.getBindingContext && oView.getBindingContext();
+				var sXref1FromContext = oContext ? oContext.getProperty("AssignmentReference") : null;
+				var sXref2FromContext = oContext ? oContext.getProperty("AccountingDocumentHeaderText") : null;
 
-			// Clear error states
-			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
-			this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
+				console.log("Validation DEBUG: Xref1 from input =", JSON.stringify(sXref1FromInput));
+				console.log("Validation DEBUG: Xref1 from OData =", JSON.stringify(sXref1FromContext));
+				console.log("Validation DEBUG: Xref2 from input =", JSON.stringify(sXref2FromInput));
+				console.log("Validation DEBUG: Xref2 from OData =", JSON.stringify(sXref2FromContext));
 
-			if (bRequiresXref2) {
-				if (!sAccountingDocumentHeaderText) {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
-						"El campo Clv.Ref.2 es obligatorio");
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
-						"El campo Clv.Ref.2 es obligatorio");
-					sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
+				// Use input value first (what user sees), fallback to OData context
+				var sAssignmentReference = (sXref1FromInput !== null ? sXref1FromInput : (sXref1FromContext || ""));
+				var sAccountingDocumentHeaderText = (sXref2FromInput !== null ? sXref2FromInput : (sXref2FromContext || ""));
+				sAssignmentReference = (sAssignmentReference || "").trim();
+				sAccountingDocumentHeaderText = (sAccountingDocumentHeaderText || "").trim();
+
+				console.log("Validation FINAL: sAssignmentReference =", JSON.stringify(sAssignmentReference), "empty?", !sAssignmentReference);
+				console.log("Validation FINAL: sAccountingDocumentHeaderText =", JSON.stringify(sAccountingDocumentHeaderText));
+
+				var sXref2Status = this._getXref2Status();
+				var sCompanyCodeVal = CompanyCode && typeof CompanyCode.getValue === "function" ? CompanyCode.getValue() : "";
+				var bRequiresXref2 = sCompanyCodeVal === "3000";
+				console.log("Validation: CompanyCode =", JSON.stringify(sCompanyCodeVal), "bRequiresXref2 =", bRequiresXref2);
+
+				// Clear error states
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.None, "");
+				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReferenceZ", sap.ui.core.ValueState.None, "");
+
+				if (bRequiresXref2) {
+					if (!sAccountingDocumentHeaderText) {
+						this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
+							"El campo Clv.Ref.2 es obligatorio");
+						this._setHeaderFieldValueState("idS2P.MM.MSI.InputAccountingDocumentHeaderText", sap.ui.core.ValueState.Error,
+							"El campo Clv.Ref.2 es obligatorio");
+						sap.m.MessageToast.show("El campo Clv.Ref.2 es obligatorio");
+						console.log("Validation: FAILED - xref2 empty");
+						return false;
+					}
+
+					if (sXref2Status === "") {
+						this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
+							"El código de cliente interno no es un aprobador válido");
+						sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
+						return false;
+					}
+
+					if (sXref2Status === "B") {
+						this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
+							"El código de cliente int. no es un aprobador válido de acuerdo al monto");
+						sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
+						return false;
+					}
+
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+				} else {
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+				}
+
+				if (!sAssignmentReference) {
+					console.log("Validation: FAILED - xref1 empty, setting error state");
+					// Apply visual error state directly to the found control
+					if (oXref1 && typeof oXref1.setValueState === "function") {
+						oXref1.setValueState(sap.ui.core.ValueState.Error);
+						oXref1.setValueStateText("El campo Clv. Ref. 1 es obligatorio");
+					}
+					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "El campo Clv. Ref. 1 es obligatorio");
+
+					// Add to standard MessageManager
+					try {
+						var oMsgManager = sap.ui.getCore().getMessageManager();
+						oMsgManager.removeMessages(oMsgManager.getMessageModel().getData().filter(function(msg) {
+							return msg.message === "El campo Clv. Ref. 1 es obligatorio";
+						}));
+						oMsgManager.addMessages(new sap.ui.core.message.Message({
+							message: "El campo Clv. Ref. 1 es obligatorio",
+							type: sap.ui.core.message.MessageType.Error,
+							target: oXref1 ? oXref1.getId() + "/value" : "",
+							processor: oView.getModel()
+						}));
+					} catch (eMsg) {
+						console.error("MessageManager error:", eMsg);
+					}
 					return false;
 				}
 
-				if (sXref2Status === "") {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
-						"El código de cliente interno no es un aprobador válido");
-					sap.m.MessageBox.error("El código de cliente interno no es un aprobador válido", {});
-					return false;
-				}
-
-				if (sXref2Status === "B") {
-					this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.Error,
-						"El código de cliente int. no es un aprobador válido de acuerdo al monto");
-					sap.m.MessageBox.error("El código de cliente int. no es un aprobador válido de acuerdo al monto", {});
-					return false;
-				}
-
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
-			} else {
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference2Z", sap.ui.core.ValueState.None, "");
+				console.log("Validation: PASSED");
+				return true;
+			} catch (ex) {
+				console.error("S1Custom._validateHeaderReferences - EXCEPTION:", ex);
+				return true; // Don't block on error
 			}
-
-			if (!sAssignmentReference) {
-				// Apply visual error state directly to the found control
-				if (oXref1 && typeof oXref1.setValueState === "function") {
-					oXref1.setValueState(sap.ui.core.ValueState.Error);
-					oXref1.setValueStateText("El campo Clv. Ref. 1 es obligatorio");
-				}
-				this._setHeaderFieldValueState("idS2P.MM.MSI.InputAssignmentReference", sap.ui.core.ValueState.Error, "El campo Clv. Ref. 1 es obligatorio");
-
-				// Add to standard MessageManager so it appears in the Fiori messages popover
-				try {
-					var oMsgManager = sap.ui.getCore().getMessageManager();
-					var sXref1Target = oXref1 ? oXref1.getId() + "/value" : "";
-					// Remove duplicate messages
-					oMsgManager.removeMessages(oMsgManager.getMessageModel().getData().filter(function(m) {
-						return m.message === "El campo Clv. Ref. 1 es obligatorio";
-					}));
-					oMsgManager.addMessages(new sap.ui.core.message.Message({
-						message: "El campo Clv. Ref. 1 es obligatorio",
-						type: sap.ui.core.message.MessageType.Error,
-						target: sXref1Target,
-						processor: oView.getModel()
-					}));
-				} catch (eMsg) {
-					console.error("MessageManager error:", eMsg);
-				}
-				return false;
-			}
-
-			return true;
 		},
+
 
 		// setJournalEntriesButtonEnabled: function () {
 		// 	if (!this.oCrossAppNavigator) {
@@ -442,14 +466,11 @@ sap.ui.define([
 		// },
 
 		doPostAction: function () {
-
+			console.log("*** S1Custom.doPostAction CALLED ***");
 			if (this._validateHeaderReferences()) {
-
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 				oPedido.data("Estado", "Post", true);
-
 				this.doSimulateAction();
-
 			}
 
 			// this._createDeferredForParkHoldAndPostAction().then(jQuery.proxy(function () {
@@ -641,12 +662,10 @@ sap.ui.define([
 		},
 
 		doCheckAction: function () {
-
+			console.log("*** S1Custom.doCheckAction CALLED ***");
 			if (this._validateHeaderReferences()) {
-
 				this.oMessagePopover.close();
 				this.submitChanges(null, jQuery.proxy(this.doCheckCallback, this), jQuery.proxy(this.doCheckCallback, this));
-
 			}
 		},
 		doCheckCallback: function () {
@@ -814,7 +833,7 @@ sap.ui.define([
 		},
 
 		doSimulateAction: function () {
-
+			console.log("*** S1Custom.doSimulateAction CALLED ***");
 			if (this._validateHeaderReferences()) {
 
 				this.oAppController.doAction(C.SIMULATE, jQuery.proxy(function () {
@@ -1628,16 +1647,11 @@ sap.ui.define([
 			this.doHoldParkAction(o, this.doParkSuccessCallback);
 		},
 		doSaveAsCompletedAction: function () {
-
+			console.log("*** S1Custom.doSaveAsCompletedAction CALLED ***");
 			if (this._validateHeaderReferences()) {
-
 				var o = {};
 				o.SaveAction = C.SAVE_ACTION_SAVE_AS_COMPLETED;
 				this.doHoldParkAction(o, this.doSaveAsCompletedSuccessCallback);
-
-				// this.oMessagePopover.close();
-				// this.submitChanges(null, jQuery.proxy(this.doCheckCallback, this), jQuery.proxy(this.doCheckCallback, this));
-
 			}
 
 			// ----------------------------------- estandar
@@ -1647,9 +1661,8 @@ sap.ui.define([
 			// this.doHoldParkAction(o, this.doSaveAsCompletedSuccessCallback);
 		},
 		doHoldParkAction: function (o, s) {
-
+			console.log("*** S1Custom.doHoldParkAction CALLED ***");
 			if (this._validateHeaderReferences()) {
-
 				var oPedido = this.getView().byId("idS2P.MM.MSI.MultiInputQuickPurchaseOrderEntry");
 				oPedido.data("Estado", "Guardar", true);
 				if (!oPedido.data("zodata")) {
@@ -1659,7 +1672,6 @@ sap.ui.define([
 					this.oAppController.doAction(C.SAVE_PRELIM, jQuery.proxy(s, this), jQuery.proxy(this.doPostHoldDiscardErrorCallback, this),
 						o);
 				}, this));
-
 			}
 
 			// ----------------------------------------------estandar
