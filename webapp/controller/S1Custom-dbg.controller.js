@@ -152,7 +152,7 @@ sap.ui.define([
 					message: sText,
 					type: sap.ui.core.message.MessageType.Error,
 					target: sTarget,
-					processor: this.getView().getModel()
+					processor: new sap.ui.core.message.ControlMessageProcessor()
 				}));
 			} else if (oInput && sState === sap.ui.core.ValueState.None) {
 				var oMsgMgr = sap.ui.getCore().getMessageManager();
@@ -253,11 +253,16 @@ sap.ui.define([
 						oMsgManager.addMessages(new sap.ui.core.message.Message({
 							message: "El campo Clv. Ref. 1 es obligatorio",
 							type: sap.ui.core.message.MessageType.Error,
-							target: oXref1 ? oXref1.getId() + "/value" : "",
-							processor: oView.getModel()
+							target: oXref1 ? oXref1.getId() + "/value" : "idS2P.MM.MSI.InputAssignmentReferenceZ",
+							processor: new sap.ui.core.message.ControlMessageProcessor()
 						}));
+
 					} catch (eMsg) {
 						console.error("MessageManager error:", eMsg);
+					}
+
+					if (!sap.ui.getCore().getMessageManager().getMessageModel().getData().length) {
+						sap.m.MessageBox.error("El campo Clv. Ref. 1 es obligatorio", {});
 					}
 					return false;
 				}
